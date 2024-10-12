@@ -7,7 +7,7 @@
 - Ustalenie strategii branczowania
 - Utworzenie pierwszych historyjek użytkownika
 
-## Niedziela 6 października
+## Niedziela 6 października 17:00
 - Utworzenie organizacji na GitHubie - Projekt Zespołowy Lab
 - Omówienie projektu 
 - Wybranie zakresu i wstępnych funkcjonalności aplikacji
