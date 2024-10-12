@@ -6,6 +6,7 @@
 - Utowrzenie repozytorium
 - Ustalenie strategii branczowania
 - Utworzenie pierwszych historyjek użytkownika
+- Utworzenie [tablicy projektu](https://miro.com/app/board/uXjVLWJwX2Y=/)
 
 ## Niedziela 6 października 17:00
 - Utworzenie organizacji na GitHubie - Projekt Zespołowy Lab
