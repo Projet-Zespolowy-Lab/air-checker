@@ -1,5 +1,8 @@
 # air-checker
-
+## Piątek 18 października 20:30
+- Pierwszy mock-up 
+- Zaproszenie dr Fulmańskiego do organizacji
+- Decyzja o użyciu API geolocation do zlokalizowania użytkownika
 
 ## Piątek 11 października 20:30
 - Utworzenie projektu w GitHubie
