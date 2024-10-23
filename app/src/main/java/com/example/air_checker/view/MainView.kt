@@ -1,4 +1,4 @@
-package com.example.air_checker
+package com.example.air_checker.view
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
