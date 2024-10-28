@@ -1,53 +1,7 @@
-// Przykład użycia
-// package com.example.listastacji
-
-// import android.os.Bundle
-// import android.util.Log
-// import androidx.activity.ComponentActivity
-// import androidx.activity.compose.setContent
-// import androidx.activity.enableEdgeToEdge
-// import androidx.compose.material3.Button
-// import androidx.compose.material3.Text
-// import androidx.compose.runtime.Composable
-// import com.example.listastacji.ui.theme.ListaStacjiTheme
-// import com.example.listastacji.ui.theme.getAllStations
-
-
-// class MainActivity : ComponentActivity() {
-//   override fun onCreate(savedInstanceState: Bundle?) {
-//     super.onCreate(savedInstanceState)
-//     enableEdgeToEdge()
-//     setContent {
-//       ListaStacjiTheme {
-//         ButtonFindTheNearestStation(userLat = 51.750270f, userLon = 19.549147f)
-//       }
-//     }
-//   }
-// }
-
-// @Composable
-// fun ButtonFindTheNearestStation(userLat: Float, userLon: Float) {
-//   Button(onClick = {
-//     getAllStations(
-//       userLat = userLat,
-//       userLon = userLon,
-//       onResult = { stations ->
-//           Log.d("Nearest","Nearest: ${stations.nearestStation()}")
-//       },
-//       onError = { error ->
-//         Log.e("API Error", error)
-//       }
-//     )
-//   }) {
-//     Text("Znajdź najbliższą stację")
-//   }
-// }
-
-
-
-package com.example.listastacji.ui.theme
+package com.example.air_checker.model
 
 import android.location.Location
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
@@ -78,7 +32,7 @@ data class StationResponse(
 class Stations(
   private val lat: Float,  // Lokalizacja użytkownika (punkt referencyjny)
   private val lon: Float,
-  private val listStations: List<Station>
+  val listStations: List<Station>
 ) {
   // Inicjalizator, który automatycznie oblicza odległości
   init {
@@ -147,6 +101,7 @@ fun getAllStations(onResult: (Stations) -> Unit, onError: (String) -> Unit, user
         withContext(Dispatchers.Main) {
           onResult(stations)
         }
+
       } ?: withContext(Dispatchers.Main) {
         onError("Brak odpowiedzi")
       }
