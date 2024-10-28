@@ -1,6 +1,7 @@
-package model
+package com.example.air_checker.model
 
 import android.location.Location
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
@@ -31,7 +32,7 @@ data class StationResponse(
 class Stations(
   private val lat: Float,  // Lokalizacja użytkownika (punkt referencyjny)
   private val lon: Float,
-  private val listStations: List<Station>
+  val listStations: List<Station>
 ) {
   // Inicjalizator, który automatycznie oblicza odległości
   init {
@@ -100,6 +101,7 @@ fun getAllStations(onResult: (Stations) -> Unit, onError: (String) -> Unit, user
         withContext(Dispatchers.Main) {
           onResult(stations)
         }
+
       } ?: withContext(Dispatchers.Main) {
         onError("Brak odpowiedzi")
       }
