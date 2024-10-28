@@ -90,6 +90,7 @@ fun getAllStations(onResult: (Stations) -> Unit, onError: (String) -> Unit, user
     .url(url)
     .build()
 
+  Log.d("Request", request.toString())
   CoroutineScope(Dispatchers.IO).launch {
     try {
       val response = client.newCall(request).execute()
