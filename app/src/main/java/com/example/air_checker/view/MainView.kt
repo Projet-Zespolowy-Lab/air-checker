@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.air_checker.BuildConfig
 import com.example.air_checker.viewModel.StationsViewModel
 
 class MainActivity : ComponentActivity() {
@@ -30,6 +31,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             TextNearestStation(stationsViewModel = stationsViewModel)
         }
+
+        LogSecretAPIKey()
     }
 }
 
@@ -49,6 +52,10 @@ fun TextNearestStation(stationsViewModel: StationsViewModel, modifier: Modifier 
         } ?: "Brak najbliższej stacji",
         modifier = modifier
     )
+}
+
+fun LogSecretAPIKey(){//Funkcja demo - można usunąć
+    Log.d("Secret", BuildConfig.API_KEY)
 }
 
 @Preview(showBackground = true)
