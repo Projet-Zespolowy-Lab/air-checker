@@ -1,4 +1,9 @@
 # air-checker
+## Sobota 2 listopada 11:00
+- Doprowadzenie do stanu, gdzie projekt buduje się u wszystkich programistów
+  - Dodana funkcja znajdująca najbliższą stację względem podanych współrzęcnych
+  - Dodana obsługa sekretów (klucza API) 
+
 ## Piątek 18 października 20:30
 - Pierwszy mock-up
 - Zaproszenie dr Fulmańskiego do organizacji
