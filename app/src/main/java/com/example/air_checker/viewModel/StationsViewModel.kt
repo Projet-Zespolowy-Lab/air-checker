@@ -18,7 +18,7 @@ class StationsViewModel : ViewModel() {
   val stationsList: LiveData<List<Station>> = _stationsList
 
   // Funkcja do pobrania stacji i obliczenia najbliższej
-  fun fetchStations(userLat: Float, userLon: Float) {
+  fun fetchStations(userLat: Double, userLon: Double) {
     Log.d("StationsViewModel", "fetchStations called with coordinates: $userLat, $userLon")
 
     CoroutineScope(Dispatchers.IO).launch {

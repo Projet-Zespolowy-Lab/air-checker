@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -18,13 +21,37 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+        getByName("debug") {
+            // Odczytaj `local.properties`
+            val localProperties = Properties()
+            val localPropertiesFile = rootProject.file("local.properties")
+            if (localPropertiesFile.exists()) {
+                localProperties.load(FileInputStream(localPropertiesFile))
+            }
+
+            val mySecretKey = localProperties.getProperty("API_KEY") ?: ""
+
+            // Ustawienie sekretu w BuildConfig
+            buildConfigField("String", "API_KEY", "\"$mySecretKey\"")
+        }
+
+        getByName("release") {
+            // Odczytaj `local.properties`
+            val localProperties = Properties()
+            val localPropertiesFile = rootProject.file("local.properties")
+            if (localPropertiesFile.exists()) {
+                localProperties.load(FileInputStream(localPropertiesFile))
+            }
+
+            val mySecretKey = localProperties.getProperty("API_KEY") ?: ""
+
+            // Ustawienie sekretu w BuildConfig
+            buildConfigField("String", "API_KEY", "\"$mySecretKey\"")
         }
     }
     compileOptions {
@@ -49,6 +76,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
