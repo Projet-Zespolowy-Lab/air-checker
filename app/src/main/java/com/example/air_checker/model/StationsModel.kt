@@ -30,8 +30,8 @@ data class StationResponse(
 
 // Klasa odpowiedzialna za zarządzanie stacjami i obliczanie odległości
 class Stations(
-  private val lat: Float,  // Lokalizacja użytkownika (punkt referencyjny)
-  private val lon: Float,
+  private val lat: Double,  // Lokalizacja użytkownika (punkt referencyjny)
+  private val lon: Double,
   val listStations: List<Station>
 ) {
   // Inicjalizator, który automatycznie oblicza odległości
@@ -74,7 +74,7 @@ class Stations(
 }
 
 // Funkcja pobierająca stacje z API
-fun getAllStations(onResult: (Stations) -> Unit, onError: (String) -> Unit, userLat: Float, userLon: Float) {
+fun getAllStations(onResult: (Stations) -> Unit, onError: (String) -> Unit, userLat: Double, userLon: Double) {
   val client = OkHttpClient()
 
   val url = HttpUrl.Builder()
