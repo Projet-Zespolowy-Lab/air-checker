@@ -90,7 +90,36 @@ data class AirQualityIndex(
 
   @SerializedName("Kod zanieczyszczenia krytycznego")
   val criticalPollutantCode: String?
-)
+) {
+  // Funkcja członkowska konwertująca AirQualityIndex na AirQualityCategories
+  fun toAirQualityCategories(): AirQualityCategories {
+    val categories = mutableListOf<AirQualityCategory>()
+
+    // Dodajemy krajowy indeks jakości powietrza
+    indexCategoryName?.let {
+      categories.add(AirQualityCategory("Krajowy indeks jakości powietrza", it))
+    }
+
+    // Dodajemy indeks SO2
+    categories.add(AirQualityCategory("SO2", so2IndexCategoryName))
+
+    // Dodajemy indeks NO2
+    categories.add(AirQualityCategory("NO2", no2IndexCategoryName))
+
+    // Dodajemy indeks PM10
+    categories.add(AirQualityCategory("PM10", pm10IndexCategoryName))
+
+    // Dodajemy indeks PM2.5
+    categories.add(AirQualityCategory("PM2.5", pm25IndexCategoryName))
+
+    // Dodajemy indeks O3
+    categories.add(AirQualityCategory("O3", o3IndexCategoryName))
+
+    // Zwracamy jako obiekt AirQualityCategories
+    return AirQualityCategories(categories)
+  }
+}
+
 
 
 

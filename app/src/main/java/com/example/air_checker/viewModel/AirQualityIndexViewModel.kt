@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.AirQualityIndex
 import com.google.gson.Gson
 import com.google.gson.JsonParser
@@ -16,8 +17,12 @@ import okhttp3.Request
 
 class AirQualityIndexViewModel : ViewModel() {
   private val client = OkHttpClient()
+
   private val _sensorData = MutableLiveData<String>()
   val sensorData: LiveData<String> = _sensorData
+
+  private val _airQualityCategories = MutableLiveData<AirQualityCategories>()
+  val airQualityCategories: LiveData<AirQualityCategories> = _airQualityCategories
 
   fun fetchSensorsDataByStationId(stationId: Int) {
     viewModelScope.launch(Dispatchers.IO) {
@@ -46,6 +51,11 @@ class AirQualityIndexViewModel : ViewModel() {
           val airQualityIndex = parseAirQualityIndexResponse(it)
           Log.d("airQualityIndex", airQualityIndex.toString())
           _sensorData.postValue(airQualityIndex.toString())
+
+          Log.d("airQualityCategories", airQualityCategories.toString())
+          _airQualityCategories.postValue(airQualityIndex?.toAirQualityCategories()) // Przekształcenie na AirQualityCategories
+
+
         } ?: _sensorData.postValue("Brak danych")
       } catch (e: Exception) {
         _sensorData.postValue("Błąd: ${e.message}")
@@ -63,6 +73,8 @@ class AirQualityIndexViewModel : ViewModel() {
 
     Log.d("parseAirQualityIndexResponse", aqIndexObject.toString())
     // Tworzymy obiekt AirQualityIndex z JSON
+
+
     return gson.fromJson(aqIndexObject, AirQualityIndex::class.java)
   }
 }
