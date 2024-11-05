@@ -21,7 +21,6 @@ class LocationModel {
                 .post(requestBody)
                 .build()
 
-            Log.d("getGeolocation - request", request.toString())
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
                     Log.e("getGeolocation", response.toString())
@@ -37,7 +36,7 @@ class LocationModel {
                 Pair(lat, lng)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("getGeolocation", e.message.toString())
             null
         }
     }

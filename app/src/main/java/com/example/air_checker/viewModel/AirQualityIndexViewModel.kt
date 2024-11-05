@@ -1,5 +1,6 @@
 package com.example.air_checker.viewModel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -32,13 +33,18 @@ class AirQualityIndexViewModel : ViewModel() {
         .build()
 
       val request = Request.Builder().url(url).build()
+      Log.d("fetchSensorsDataByStationId", request.toString())
 
       try {
         val response = client.newCall(request).execute()
         val responseBody = response.body?.string()
 
+        Log.d("fetchSensorsDataByStationId - reponseBody", responseBody.toString())
+
         responseBody?.let {
+          Log.d("fetchSensorsDataByStationId - it", it)
           val airQualityIndex = parseAirQualityIndexResponse(it)
+          Log.d("airQualityIndex", airQualityIndex.toString())
           _sensorData.postValue(airQualityIndex.toString())
         } ?: _sensorData.postValue("Brak danych")
       } catch (e: Exception) {
@@ -55,6 +61,7 @@ class AirQualityIndexViewModel : ViewModel() {
     val jsonObject = JsonParser.parseString(json).asJsonObject
     val aqIndexObject = jsonObject.getAsJsonObject("AqIndex") ?: return null
 
+    Log.d("parseAirQualityIndexResponse", aqIndexObject.toString())
     // Tworzymy obiekt AirQualityIndex z JSON
     return gson.fromJson(aqIndexObject, AirQualityIndex::class.java)
   }

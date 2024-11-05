@@ -59,7 +59,7 @@ fun TextNearestStation(
     airQualityIndexViewModel: AirQualityIndexViewModel
 ) {
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
-    val sensorData by airQualityIndexViewModel.sensorData.observeAsState("Ładowanie danych...")
+    val sensorData by airQualityIndexViewModel.sensorData.observeAsState(initial = "Ładowanie danych...")
 
     LaunchedEffect(nearestStation) {
         nearestStation?.let { station ->
