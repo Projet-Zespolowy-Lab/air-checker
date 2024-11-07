@@ -39,9 +39,11 @@ class MainActivity : ComponentActivity() {
                 if (coordinates != null) {
                     // Przekaż współrzędne do stationsViewModel
                     stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
+
+
                 } else {
                     // Obsłuż błąd pobierania współrzędnych
-                    println("Failed to fetch location")
+                    Log.d("Error while fetching locations", "coordinates are null")
                 }
             }
         }
@@ -59,7 +61,8 @@ fun TextNearestStation(
     airQualityIndexViewModel: AirQualityIndexViewModel
 ) {
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
-    val sensorData by airQualityIndexViewModel.sensorData.observeAsState("Ładowanie danych...")
+    val sensorData by airQualityIndexViewModel.sensorData.observeAsState(initial = "Ładowanie danych...")
+    val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
 
     LaunchedEffect(nearestStation) {
         nearestStation?.let { station ->
@@ -79,6 +82,14 @@ fun TextNearestStation(
 
         // Wyświetlamy dane z sensorów
         Text(text = sensorData)
+
+        // Wyświetlanie kategorii jakości powietrza
+        airQualityCategories?.let { categories ->
+            categories.airQualityCategories.forEach { category ->
+                Text(text = "${category.categoryName}: ${category.qualityValue ?: "Brak danych"}")
+            }
+        }
+
     }
 }
 

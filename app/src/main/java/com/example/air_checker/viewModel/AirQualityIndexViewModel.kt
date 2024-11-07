@@ -1,9 +1,11 @@
 package com.example.air_checker.viewModel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.AirQualityIndex
 import com.google.gson.Gson
 import com.google.gson.JsonParser
@@ -15,8 +17,12 @@ import okhttp3.Request
 
 class AirQualityIndexViewModel : ViewModel() {
   private val client = OkHttpClient()
+
   private val _sensorData = MutableLiveData<String>()
   val sensorData: LiveData<String> = _sensorData
+
+  private val _airQualityCategories = MutableLiveData<AirQualityCategories>()
+  val airQualityCategories: LiveData<AirQualityCategories> = _airQualityCategories
 
   fun fetchSensorsDataByStationId(stationId: Int) {
     viewModelScope.launch(Dispatchers.IO) {
@@ -32,14 +38,24 @@ class AirQualityIndexViewModel : ViewModel() {
         .build()
 
       val request = Request.Builder().url(url).build()
+      Log.d("fetchSensorsDataByStationId", request.toString())
 
       try {
         val response = client.newCall(request).execute()
         val responseBody = response.body?.string()
 
+        Log.d("fetchSensorsDataByStationId - reponseBody", responseBody.toString())
+
         responseBody?.let {
+          Log.d("fetchSensorsDataByStationId - it", it)
           val airQualityIndex = parseAirQualityIndexResponse(it)
+          Log.d("airQualityIndex", airQualityIndex.toString())
           _sensorData.postValue(airQualityIndex.toString())
+
+          Log.d("airQualityCategories", airQualityCategories.toString())
+          _airQualityCategories.postValue(airQualityIndex?.toAirQualityCategories()) // Przekształcenie na AirQualityCategories
+
+
         } ?: _sensorData.postValue("Brak danych")
       } catch (e: Exception) {
         _sensorData.postValue("Błąd: ${e.message}")
@@ -55,7 +71,10 @@ class AirQualityIndexViewModel : ViewModel() {
     val jsonObject = JsonParser.parseString(json).asJsonObject
     val aqIndexObject = jsonObject.getAsJsonObject("AqIndex") ?: return null
 
+    Log.d("parseAirQualityIndexResponse", aqIndexObject.toString())
     // Tworzymy obiekt AirQualityIndex z JSON
+
+
     return gson.fromJson(aqIndexObject, AirQualityIndex::class.java)
   }
 }
