@@ -6,13 +6,23 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.air_checker.BuildConfig
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
@@ -72,24 +82,60 @@ fun TextNearestStation(
         }
     }
 
-    Column() {
-        Text(
-            text = nearestStation?.let { station ->
-                "Nearest station: ${station.id}, " +
-                    "distance to: ${"%.2f".format(station.distanceTo)} m"
-            } ?: "Brak najbliższej stacji"
-        )
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp), // Odstęp wokół kafelka
+            elevation = CardDefaults.cardElevation(8.dp) // Cień dla kafelka
+    ) {
+        Column() {
+            Text(
+                text = nearestStation?.let { station ->
+                    "Nearest station: ${station.id}, " +
+                        "Name: ${station.name}, " +
+                        "distance to: ${"%.2f".format(station.distanceTo)} m"
+                } ?: "Brak najbliższej stacji",
+                modifier = Modifier
+                    .fillMaxWidth()// Tekst zajmuje pełną szerokość dostępnego miejsca
+                    .padding(top = 16.dp)
+                    .padding(16.dp)         // Dodaje odstęp wokół tekstu
+                    .background(Color.LightGray) // Dodaje tło w kolorze jasnoszarym
+                    .padding(8.dp)          // Dodatkowy padding wewnątrz tła
+            )
 
-        // Wyświetlamy dane z sensorów
-        Text(text = sensorData)
+            // Wyświetlamy dane z sensorów
+//        Text(text = sensorData)
 
-        // Wyświetlanie kategorii jakości powietrza
-        airQualityCategories?.let { categories ->
-            categories.airQualityCategories.forEach { category ->
-                Text(text = "${category.categoryName}: ${category.qualityValue ?: "Brak danych"}")
+            // Wyświetlanie kategorii jakości powietrza
+            airQualityCategories?.let { categories ->
+                categories.airQualityCategories.forEach { category ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp), // Odstęp między kafelkami
+                        elevation = CardDefaults.cardElevation(4.dp) // Cień dla kafelka
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(16.dp) // Odstęp wewnątrz kafelka
+                        ) {
+                            Text(
+                                text = category.categoryName,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${category.qualityValue ?: "Brak danych"}",
+                                fontSize = 14.sp,
+                                modifier = Modifier.padding(top = 4.dp) // Odstęp między nazwą a wartością
+                            )
+                        }
+                    }
+                }
             }
-        }
 
+
+        }
     }
 }
 
