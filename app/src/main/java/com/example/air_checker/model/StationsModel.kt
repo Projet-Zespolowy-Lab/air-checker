@@ -15,6 +15,7 @@ import okhttp3.Request
 // Klasa reprezentująca stację
 data class Station(
   val id: Int,
+  val name: String,
   val lat: Double,
   val lon: Double,
   var distanceTo: Double = Double.MAX_VALUE // Odległość do punktu referencyjnego
@@ -123,6 +124,7 @@ fun parseStationsJson(json: String): List<Station> {
   return stationResponseList.map {
     Station(
       it.id,
+      it.stationName,
       it.gegrLat.toDoubleOrNull() ?: 0.0,
       it.gegrLon.toDoubleOrNull() ?: 0.0
     )
