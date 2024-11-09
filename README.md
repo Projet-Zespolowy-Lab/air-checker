@@ -1,4 +1,14 @@
 # air-checker
+
+## Piętek 8 listopdada 20:30
+- Odczytywanie geolokacji użytkownika
+- Wystawienie nazwy stacji, z której pochodzą dane
+- Wyświetlenie danych najbliższej stacji
+<img width="100" alt="image" src="https://github.com/user-attachments/assets/4d240427-26b8-474d-a3b1-82b76d427b1f">
+
+
+
+
 ## Sobota 2 listopada 11:00
 - Doprowadzenie do stanu, gdzie projekt buduje się u wszystkich programistów
   - Dodana funkcja znajdująca najbliższą stację względem podanych współrzęcnych
