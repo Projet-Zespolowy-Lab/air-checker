@@ -20,7 +20,6 @@ class MainViewModel {
             if (categories != null) {
                 val categoryList = categories.airQualityCategories
                 for (category in categoryList) {
-                    Log.d("cat", category.qualityValue.toString())
                     if (category.categoryName == indexName) {
                         if (category.qualityValue != null) {
                             return category.qualityValue
