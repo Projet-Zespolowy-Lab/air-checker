@@ -34,7 +34,6 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
@@ -77,37 +76,20 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            TextNearestStation(stationsViewModel = stationsViewModel,
+            NearestStation(stationsViewModel = stationsViewModel,
                                airQualityIndexViewModel = airQualityIndexViewModel)
         }
     }
 }
 
 @Composable
-fun TextNearestStation(
-    stationsViewModel: StationsViewModel,
-    airQualityIndexViewModel: AirQualityIndexViewModel
-) {
+fun NearestStation(stationsViewModel: StationsViewModel,
+                       airQualityIndexViewModel: AirQualityIndexViewModel)
+{
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
     val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
     nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
     MainView(nearestStation, airQualityCategories)
-/*
-    Column() {
-        Text(
-            text = nearestStation?.let { station ->
-                "Nearest station: ${station.id}, " +
-                    "distance to: ${"%.2f".format(station.distanceTo)} m"
-            } ?: "Brak najbliższej stacji"
-        )
-
-        // Wyświetlamy dane z sensorów
-        Text(text = sensorData)
-        // Wyświetlanie kategorii jakości powietrza
-
-
-    }
-*/
 }
 
 @Composable
@@ -157,7 +139,7 @@ fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQ
         Spacer(Modifier.height(30.dp))
         Box(modifier = Modifier.fillMaxWidth().size(240.dp).drawBehind {
             drawCircle(
-                color = Color(0xFF80E4FF),
+                color = Color(MainViewModel().getColor(MainViewModel().getQuality(airQuality, "Krajowy indeks jakości powietrza"))),
                 radius = 320f
             )
             drawCircle(
