@@ -18,10 +18,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -34,13 +34,17 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.air_checker.BuildConfig
 import com.example.air_checker.R
+import com.example.air_checker.model.AirQualityCategories
+import com.example.air_checker.model.Station
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
+import com.example.air_checker.viewModel.MainViewModel
 import com.example.air_checker.viewModel.StationsViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -85,17 +89,9 @@ fun TextNearestStation(
     airQualityIndexViewModel: AirQualityIndexViewModel
 ) {
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
-    val sensorData by airQualityIndexViewModel.sensorData.observeAsState(initial = "Ładowanie danych...")
     val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
-
-    LaunchedEffect(nearestStation) {
-        nearestStation?.let { station ->
-            airQualityIndexViewModel.fetchSensorsDataByStationId(station.id)
-            Log.d("NearestStation", "ID: ${station.id}, " +
-                "Distance: ${"%.2f".format(station.distanceTo)} m")
-        }
-    }
-    MainView()
+    nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
+    MainView(nearestStation, airQualityCategories)
 /*
     Column() {
         Text(
@@ -108,18 +104,14 @@ fun TextNearestStation(
         // Wyświetlamy dane z sensorów
         Text(text = sensorData)
         // Wyświetlanie kategorii jakości powietrza
-        airQualityCategories?.let { categories ->
-            categories.airQualityCategories.forEach { category ->
-                Text(text = "${category.categoryName}: ${category.qualityValue ?: "Brak danych"}")
-            }
-        }
+
 
     }
 */
 }
 
 @Composable
-fun IndexField(indexName: String, indexValue: Int){
+fun IndexField(indexName: String, indexValue: String){
     Row(modifier = Modifier.fillMaxWidth().height(30.dp)) {
         Spacer(Modifier.width(10.dp))
         Image(
@@ -136,7 +128,7 @@ fun IndexField(indexName: String, indexValue: Int){
         )
         Spacer(Modifier.weight(0.8f))
         Text(
-            text = indexValue.toString(),
+            text = indexValue,
             fontSize = 20.sp,
             fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
             modifier = Modifier.align(Alignment.CenterVertically).offset(x = (-10).dp)
@@ -144,11 +136,10 @@ fun IndexField(indexName: String, indexValue: Int){
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
-fun MainView() {
-    Column(Modifier.fillMaxSize()) {
+fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQuality: AirQualityCategories? = AirQualityCategories(listOf())) {
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
         Box(
             contentAlignment = Alignment.TopEnd,
             modifier = Modifier
@@ -206,17 +197,19 @@ fun MainView() {
             )
             Spacer(Modifier.width(5.dp))
             Text(
-                text = "Warsaw, PL",
+                text = MainViewModel().getNameNearestStation(nearestStation) + ", PL",
                 fontSize = 14.sp,
                 fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
             )
         }
         Spacer(Modifier.height(50.dp))
         Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
-            IndexField("PM 2.5", 30)
-            IndexField("PM 10", 30)
-            IndexField("NO 2", 2)
-            IndexField("SO 2", -1)
+            IndexField("PM 2.5", MainViewModel().getQuality(airQuality, "PM2.5"))
+            IndexField("PM 10", MainViewModel().getQuality(airQuality, "PM10"))
+            IndexField("NO 2", MainViewModel().getQuality(airQuality, "NO2"))
+            IndexField("SO 2", MainViewModel().getQuality(airQuality, "SO2"))
+            IndexField("O 3", MainViewModel().getQuality(airQuality, "O3"))
+
         }
     }
 }
