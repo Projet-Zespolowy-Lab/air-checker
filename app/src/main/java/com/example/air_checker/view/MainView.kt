@@ -154,15 +154,17 @@ fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQ
                     fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
                     modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp).padding(top = 15.dp)
                 )
+                Spacer(Modifier.height(10.dp))
                 Text(
-                    text = "29",
-                    fontSize = 96.sp,
+                    text = MainViewModel().getPercentageAirPurity(MainViewModel().getQuality(airQuality, "Krajowy indeks jakości powietrza")),
+                    fontSize = 75.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
+                Spacer(Modifier.height(10.dp))
                 Text(
-                    text = "Good",
+                    text = MainViewModel().getQuality(airQuality, "Krajowy indeks jakości powietrza"),
                     fontSize = 20.sp,
                     fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
                     modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = (-30).dp)

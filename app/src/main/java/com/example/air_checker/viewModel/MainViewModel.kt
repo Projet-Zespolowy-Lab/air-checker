@@ -1,5 +1,6 @@
 package com.example.air_checker.viewModel
 
+import android.util.Log
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.IndexColors
 import com.example.air_checker.model.Station
@@ -19,6 +20,7 @@ class MainViewModel {
             if (categories != null) {
                 val categoryList = categories.airQualityCategories
                 for (category in categoryList) {
+                    Log.d("cat", category.qualityValue.toString())
                     if (category.categoryName == indexName) {
                         if (category.qualityValue != null) {
                             return category.qualityValue
@@ -40,5 +42,16 @@ class MainViewModel {
             "Bardzo zły" -> return IndexColors.Bardzo_Zły.rgb
         }
         return IndexColors.Brak.rgb
+    }
+    fun getPercentageAirPurity(indexValue: String): String {
+        when(indexValue){
+            "Bardzo dobry" -> return IndexColors.Bardzo_Dobry.value
+            "Dobry" -> return IndexColors.Dobry.value
+            "Umiarkowany" -> return IndexColors.Umiarkowany.value
+            "Dostateczny" -> return IndexColors.Dostateczny.value
+            "Zły" -> return IndexColors.Zły.value
+            "Bardzo zły" -> return IndexColors.Bardzo_Zły.value
+        }
+        return IndexColors.Brak.value
     }
 }
