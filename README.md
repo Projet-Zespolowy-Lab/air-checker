@@ -18,7 +18,9 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 - Figma
 - Google Apis
 - API Głównego Inspektoratu Ochrony Środowiska (https://powietrze.gios.gov.pl/pjp/content/api)
+- Replit
 - Miro
+  
 
 
 <br>
