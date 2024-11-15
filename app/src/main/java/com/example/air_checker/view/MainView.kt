@@ -1,5 +1,10 @@
 package com.example.air_checker.view
 
+import android.annotation.SuppressLint
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -43,6 +48,7 @@ import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.Station
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
+import kotlinx.coroutines.delay
 import com.example.air_checker.viewModel.MainViewModel
 import com.example.air_checker.viewModel.StationsViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -58,19 +64,32 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val apiKey = BuildConfig.API_KEY
-        locationViewModel.fetchLocation(apiKey)
 
-        // Wywołanie fetchStations z podanymi współrzędnymi
+        // Obserwacja połączenia sieciowego
+        observeNetworkConnectivity()
+
+        // Regularne pobieranie lokalizacji i stacji co minutę
+        lifecycleScope.launch {
+            while (true) {
+                if (isNetworkAvailable()) {
+                    locationViewModel.fetchLocation(apiKey)
+                    stationsViewModel.setNetworkError(false) // reset błędu sieci
+                } else {
+                    stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
+                    Log.d("MainActivity", "Brak połączenia z internetem")
+                }
+                delay(60000) // odświeżanie co minutę
+            }
+        }
+
         lifecycleScope.launch {
             locationViewModel.coordinates.collectLatest { coordinates ->
-                if (coordinates != null) {
-                    // Przekaż współrzędne do stationsViewModel
+                if (coordinates != null && isNetworkAvailable()) {
                     stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
-
-
+                    stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
                 } else {
-                    // Obsłuż błąd pobierania współrzędnych
-                    Log.d("Error while fetching locations", "coordinates are null")
+                    stationsViewModel.setNetworkError(true)
+                    Log.d("MainActivity", "Brak połączenia lub brak współrzędnych")
                 }
             }
         }
@@ -80,6 +99,28 @@ class MainActivity : ComponentActivity() {
                                airQualityIndexViewModel = airQualityIndexViewModel)
         }
     }
+
+    // Funkcja nasłuchująca stanu połączenia sieciowego
+    private fun observeNetworkConnectivity() {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                stationsViewModel.setNetworkError(false)
+            }
+
+            override fun onLost(network: Network) {
+                stationsViewModel.setNetworkError(true)
+            }
+        })
+    }
+
+    // Funkcja sprawdzająca dostępność połączenia sieciowego (na żądanie)
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    }
 }
 
 @Composable
@@ -87,6 +128,23 @@ fun NearestStation(stationsViewModel: StationsViewModel,
                        airQualityIndexViewModel: AirQualityIndexViewModel)
 {
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
+    val networkError by stationsViewModel.networkError.observeAsState(false)
+
+    Column(modifier = modifier) {
+        when {
+            networkError -> {
+                // Komunikat o braku internetu
+                Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
+            }
+            nearestStation != null -> {
+                // Wyświetlenie informacji o najbliższej stacji
+                Text(text = "Nearest station: ${nearestStation?.id}, distance to: ${nearestStation?.distanceTo} m")
+            }
+            else -> {
+                // Tekst, gdy brak danych o najbliższej stacji
+                Text(text = "Brak najbliższej stacji")
+            }
+        }
     val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
     nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
     MainView(nearestStation, airQualityCategories)
@@ -117,6 +175,7 @@ fun IndexField(indexName: String, indexValue: String){
         )
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
