@@ -17,6 +17,15 @@ class StationsViewModel : ViewModel() {
   private val _stationsList = MutableLiveData<List<Station>>()
   val stationsList: LiveData<List<Station>> = _stationsList
 
+  // Pole do śledzenia błędu połączenia
+  private val _networkError = MutableLiveData(false)
+  val networkError: LiveData<Boolean> = _networkError
+
+  // Funkcja aktualizująca stan błędu sieci
+  fun setNetworkError(hasError: Boolean) {
+    _networkError.postValue(hasError)
+  }
+
   // Funkcja do pobrania stacji i obliczenia najbliższej
   fun fetchStations(userLat: Double, userLon: Double) {
     Log.d("StationsViewModel", "fetchStations called with coordinates: $userLat, $userLon")
@@ -25,14 +34,14 @@ class StationsViewModel : ViewModel() {
       getAllStations(
         onResult = { stations ->
           _stationsList.postValue(stations.listStations)
-          // Zaloguj liczbę stacji w listStations
           Log.d("StationsViewModel", "Fetched stations count: ${stations.listStations.size}")
 
           _nearestStation.postValue(stations.nearestStation())
+          setNetworkError(false)  // Reset błędu sieci po udanym pobraniu
         },
         onError = { error ->
-          // Obsługa błędu - można zaktualizować LiveData dla błędów lub wyświetlić komunikat
           Log.e("StationsViewModel", "Error fetching stations: $error")
+          setNetworkError(true)  // Ustawienie błędu sieci w przypadku błędu
         },
         userLat = userLat,
         userLon = userLon
