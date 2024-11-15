@@ -1,5 +1,6 @@
 package com.example.air_checker.viewModel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.air_checker.model.LocationModel
@@ -21,6 +22,7 @@ class LocationViewModel : ViewModel() {
             _coordinates.value = if (location != null) {
                 Coordinates(location.first, location.second)
             } else {
+                Log.e("fetchLocation", "Empty location")
                 null
             }
         }

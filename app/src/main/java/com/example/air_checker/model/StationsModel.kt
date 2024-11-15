@@ -15,9 +15,10 @@ import okhttp3.Request
 // Klasa reprezentująca stację
 data class Station(
   val id: Int,
-  val lat: Float,
-  val lon: Float,
-  var distanceTo: Float = Float.MAX_VALUE // Odległość do punktu referencyjnego
+  val name: String,
+  val lat: Double,
+  val lon: Double,
+  var distanceTo: Double = Double.MAX_VALUE // Odległość do punktu referencyjnego
 )
 
 // Klasa odpowiadająca strukturze danych z odpowiedzi API
@@ -44,10 +45,10 @@ class Stations(
   private fun calculateDistances() {
     listStations.forEach { station ->
       station.distanceTo = calculateDistance(
-        lat.toDouble(),
-        lon.toDouble(),
-        station.lat.toDouble(),
-        station.lon.toDouble()
+        lat,
+        lon,
+        station.lat,
+        station.lon
       )
     }
   }
@@ -58,7 +59,7 @@ class Stations(
   }
 
   // Funkcja obliczająca odległość między dwoma punktami geograficznymi
-  private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
+  private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
     val startPoint = Location("startPoint").apply {
       latitude = lat1
       longitude = lon1
@@ -69,7 +70,7 @@ class Stations(
       longitude = lon2
     }
 
-    return startPoint.distanceTo(endPoint)  // Odległość w metrach
+    return startPoint.distanceTo(endPoint).toDouble()  // Odległość w metrach
   }
 }
 
@@ -123,8 +124,9 @@ fun parseStationsJson(json: String): List<Station> {
   return stationResponseList.map {
     Station(
       it.id,
-      it.gegrLat.toFloatOrNull() ?: 0.0f,
-      it.gegrLon.toFloatOrNull() ?: 0.0f
+      it.stationName,
+      it.gegrLat.toDoubleOrNull() ?: 0.0,
+      it.gegrLon.toDoubleOrNull() ?: 0.0
     )
   }
 }

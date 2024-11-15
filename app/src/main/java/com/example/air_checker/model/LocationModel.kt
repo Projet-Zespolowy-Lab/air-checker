@@ -1,5 +1,6 @@
 package com.example.air_checker.model
 
+import android.util.Log
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,7 +22,10 @@ class LocationModel {
                 .build()
 
             client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return null
+                if (!response.isSuccessful) {
+                    Log.e("getGeolocation", response.toString())
+                    return null
+                }
 
                 val responseBody = response.body?.string() ?: return null
                 val jsonResponse = JSONObject(responseBody)
@@ -32,7 +36,7 @@ class LocationModel {
                 Pair(lat, lng)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("getGeolocation", e.message.toString())
             null
         }
     }
