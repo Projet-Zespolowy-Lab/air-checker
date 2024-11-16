@@ -2,7 +2,7 @@
 
 ## 🖋️ Autorzy
 - Marek Gołąbek
-- Batrosz Siedlecki
+- Bartosz Siedlecki
 - Piotr Sobieraj
 - Wiktor Szczepanik
 
