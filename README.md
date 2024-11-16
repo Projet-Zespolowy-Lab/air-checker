@@ -43,7 +43,7 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 
 
 
-## Piętek 8 listopdada 20:30
+## Piętek 8 listopada 20:30
 - Odczytywanie geolokacji użytkownika
 - Wystawienie nazwy stacji, z której pochodzą dane
 - Wyświetlenie danych najbliższej stacji
