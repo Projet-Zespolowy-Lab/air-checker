@@ -1,6 +1,49 @@
-# air-checker
+# Air Checker
 
-## Piętek 8 listopdada 20:30
+## 🖋️ Autorzy
+- Marek Gołąbek
+- Bartosz Siedlecki
+- Piotr Sobieraj
+- Wiktor Szczepanik
+
+## 📖 Opis projektu
+Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego otoczeniu
+
+ ## 🛠️ Wykorzystane technologie i narzędzia
+- Android Studio
+- Kotlin
+
+## Pozostałe
+- GitHub
+- Figma
+- Google Apis
+- API Głównego Inspektoratu Ochrony Środowiska (https://powietrze.gios.gov.pl/pjp/content/api)
+- Replit
+- Miro
+  
+
+
+<br>
+
+
+## Piętek 15 listopada 20:30
+- Integracja z interfejsem użytkownika
+  
+<img width="100" alt="image" src="https://github.com/user-attachments/assets/32861865-db41-499d-83bc-2507cefb4812">
+
+- Informowanie kolorem o jakości powietrza
+- Przygotowanie logo aplikacji
+  
+  <img width="50" src="https://github.com/user-attachments/assets/5c42005f-cfe8-4e36-8135-183f7c863d3f">
+
+- Rozwinięcie diagramu sekwencji
+
+  <img width="100" alt="image" src="https://github.com/user-attachments/assets/a1ecbf5b-c688-4a67-85e0-3c0ad408ba7d">
+
+
+
+
+## Piętek 8 listopada 20:30
 - Odczytywanie geolokacji użytkownika
 - Wystawienie nazwy stacji, z której pochodzą dane
 - Wyświetlenie danych najbliższej stacji
