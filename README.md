@@ -26,7 +26,7 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 <br>
 
 
-## Piętek 15 listopdada 20:30
+## Piętek 15 listopada 20:30
 - Integracja z interfejsem użytkownika
   
 <img width="100" alt="image" src="https://github.com/user-attachments/assets/32861865-db41-499d-83bc-2507cefb4812">
