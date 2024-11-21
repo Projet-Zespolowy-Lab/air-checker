@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             locationViewModel.coordinates.collectLatest { coordinates ->
                 if (coordinates != null && isNetworkAvailable()) {
-                    stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
+                    stationsViewModel.fetchStations(52.538301, 19.742022)
                     stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
                 } else {
                     stationsViewModel.setNetworkError(true)
@@ -125,7 +125,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NearestStation(stationsViewModel: StationsViewModel,
-                       airQualityIndexViewModel: AirQualityIndexViewModel) {
+                       airQualityIndexViewModel: AirQualityIndexViewModel)
+{
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
     val networkError by stationsViewModel.networkError.observeAsState(false)
 
@@ -135,144 +136,115 @@ fun NearestStation(stationsViewModel: StationsViewModel,
                 // Komunikat o braku internetu
                 Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
             }
-
-            nearestStation != null -> {
-                // Wyświetlenie informacji o najbliższej stacji
-                //Text(text = "Nearest station: ${nearestStation?.id}, distance to: ${nearestStation?.distanceTo} m")
-            }
-
-            else -> {
-                // Tekst, gdy brak danych o najbliższej stacji
-                //Text(text = "Brak najbliższej stacji")
-            }
         }
-        val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
-        nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
-        MainView(nearestStation, airQualityCategories)
+    val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
+    nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
+    MainView(nearestStation, airQualityCategories)
+}}
+@Composable
+fun IndexField(indexName: String, indexValue: String){
+    Row(modifier = Modifier.fillMaxWidth().height(30.dp)) {
+        Spacer(Modifier.width(10.dp))
+        Image(
+            painter = painterResource(R.drawable.info_blue),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.size(30.dp)
+        )
+        Spacer(Modifier.width(10.dp))
+        Text(
+            text = indexName,
+            fontSize = 20.sp,
+            fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal))
+        )
+        Spacer(Modifier.weight(0.8f))
+        Text(
+            text = indexValue,
+            fontSize = 20.sp,
+            fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+            modifier = Modifier.align(Alignment.CenterVertically).offset(x = (-10).dp)
+        )
     }
 }
 
-    @Composable
-    fun IndexField(indexName: String, indexValue: String) {
-        Row(modifier = Modifier.fillMaxWidth().height(30.dp)) {
-            Spacer(Modifier.width(10.dp))
+
+@Preview(showBackground = true)
+@Composable
+fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQuality: AirQualityCategories? = AirQualityCategories(listOf())) {
+    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+        Box(
+            contentAlignment = Alignment.TopEnd,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 10.dp, end = 10.dp)
+        ){
             Image(
-                painter = painterResource(R.drawable.info_blue),
+                painter = painterResource(R.drawable.info),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.size(30.dp)
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = indexName,
-                fontSize = 20.sp,
-                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal))
-            )
-            Spacer(Modifier.weight(0.8f))
-            Text(
-                text = indexValue,
-                fontSize = 20.sp,
-                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                modifier = Modifier.align(Alignment.CenterVertically).offset(x = (-10).dp)
-            )
-        }
-    }
-
-
-    @Composable
-    fun MainView(
-        nearestStation: Station? = Station(999, "Warsaw", 0.0, 0.0, 0.0),
-        airQuality: AirQualityCategories? = AirQualityCategories(listOf())
-    ) {
-        Column(Modifier.fillMaxSize().statusBarsPadding()) {
-            Box(
-                contentAlignment = Alignment.TopEnd,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 10.dp, end = 10.dp)
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.info),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(31.dp, 31.dp)
-                )
-            }
-            Spacer(Modifier.height(30.dp))
-            Box(modifier = Modifier.fillMaxWidth().size(240.dp).drawBehind {
-                drawCircle(
-                    color = Color(
-                        MainViewModel().getColor(
-                            MainViewModel().getQuality(
-                                airQuality,
-                                "Krajowy indeks jakości powietrza"
-                            )
-                        )
-                    ),
-                    radius = 320f
-                )
-                drawCircle(
-                    color = Color(0xFFFFE9C9),
-                    radius = 305f
-                )
-            }) {
-                Column(modifier = Modifier.align(Alignment.TopCenter)) {
-                    Text(
-                        text = "AIR METER",
-                        fontSize = 20.sp,
-                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                        modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp)
-                            .padding(top = 15.dp)
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        text = MainViewModel().getPercentageAirPurity(
-                            MainViewModel().getQuality(
-                                airQuality,
-                                "Krajowy indeks jakości powietrza"
-                            )
-                        ),
-                        fontSize = 75.sp,
-                        fontFamily = FontFamily(Font(R.font.prompt)),
-                        fontWeight = FontWeight(250),
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        text = MainViewModel().getQuality(
-                            airQuality,
-                            "Krajowy indeks jakości powietrza"
-                        ),
-                        fontSize = 20.sp,
-                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                        modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = (-30).dp)
-                    )
-                }
-            }
-            Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                Image(
-                    painter = painterResource(R.drawable.arrow),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(15.dp, 15.dp)
-                )
-                Spacer(Modifier.width(5.dp))
+                    .size(31.dp, 31.dp)
+            )
+        }
+        Spacer(Modifier.height(30.dp))
+        Box(modifier = Modifier.fillMaxWidth().size(240.dp).drawBehind {
+            drawCircle(
+                color = Color(MainViewModel().getColor(MainViewModel().getQuality(airQuality, "Krajowy indeks jakości powietrza"))),
+                radius = 320f
+            )
+            drawCircle(
+                color = Color(0xFFFFE9C9),
+                radius = 305f
+            )
+        }) {
+            Column(modifier = Modifier.align(Alignment.TopCenter)){
                 Text(
-                    text = MainViewModel().getNameNearestStation(nearestStation) + ", PL",
-                    fontSize = 14.sp,
+                    text = "AIR METER",
+                    fontSize = 20.sp,
                     fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp).padding(top = 15.dp)
                 )
-            }
-            Spacer(Modifier.height(50.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
-                IndexField("PM 2.5", MainViewModel().getQuality(airQuality, "PM2.5"))
-                IndexField("PM 10", MainViewModel().getQuality(airQuality, "PM10"))
-                IndexField("NO 2", MainViewModel().getQuality(airQuality, "NO2"))
-                IndexField("SO 2", MainViewModel().getQuality(airQuality, "SO2"))
-                IndexField("O 3", MainViewModel().getQuality(airQuality, "O3"))
-
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = MainViewModel().getPercentageAirPurity(MainViewModel().getQuality(airQuality, "Krajowy indeks jakości powietrza")),
+                    fontSize = 75.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt)),
+                    fontWeight = FontWeight(250),
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = MainViewModel().getQuality(airQuality, "Krajowy indeks jakości powietrza"),
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = (-30).dp)
+                )
             }
         }
+        Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+            Image(
+                painter = painterResource(R.drawable.arrow),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(15.dp, 15.dp)
+            )
+            Spacer(Modifier.width(5.dp))
+            Text(
+                text = MainViewModel().getNameNearestStation(nearestStation) + ", PL",
+                fontSize = 14.sp,
+                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+            )
+        }
+        Spacer(Modifier.height(50.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
+            IndexField("PM 2.5", MainViewModel().getQuality(airQuality, "PM2.5"))
+            IndexField("PM 10", MainViewModel().getQuality(airQuality, "PM10"))
+            IndexField("NO 2", MainViewModel().getQuality(airQuality, "NO2"))
+            IndexField("SO 2", MainViewModel().getQuality(airQuality, "SO2"))
+            IndexField("O 3", MainViewModel().getQuality(airQuality, "O3"))
+
+        }
     }
+}
+
