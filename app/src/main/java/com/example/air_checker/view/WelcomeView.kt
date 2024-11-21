@@ -47,7 +47,7 @@ class WelcomeActivity: ComponentActivity() {
 }
 
 @Composable
-fun WelcomeView(navigator: NavHostController){
+fun WelcomeView(navigator: NavHostController, textButton: String){
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     Column(Modifier.statusBarsPadding().navigationBarsPadding().fillMaxSize()) {
@@ -80,7 +80,7 @@ fun WelcomeView(navigator: NavHostController){
             Text(
                 fontSize = 26.sp,
                 fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                text = "Zaczynajmy"
+                text = textButton
             )
         }
     }
@@ -89,6 +89,6 @@ fun WelcomeView(navigator: NavHostController){
 @Preview(showBackground = true)
 @Composable
 fun WelcomePreview(){
-    WelcomeView(rememberNavController())
+    WelcomeView(rememberNavController(), "Zaczynajmy")
 }
 

@@ -44,7 +44,7 @@ class AppNavigator {
         val context = LocalContext.current
         val navigator: NavHostController = rememberNavController()
         NavHost(navController = navigator, startDestination = startDestination) {
-            composable("start") { WelcomeView(navigator) }
+            composable("start") { WelcomeView(navigator, "Zaczynajmy") }
             composable("home") { context.startActivity(Intent(context, MainActivity::class.java)) }
 
         }
