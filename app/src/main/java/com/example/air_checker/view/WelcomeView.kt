@@ -1,5 +1,6 @@
 package com.example.air_checker.view
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -29,17 +31,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.air_checker.R
-import com.example.air_checker.model.AppNavigator
 
 class WelcomeActivity: ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent{
-            AppNavigator().checkFirstBoot()
+            val text = if(intent.getStringExtra("buttonText") != null) intent.getStringExtra("buttonText") else "Zaczynajmy"
+            WelcomeView(text.toString())
         }
     }
 
@@ -47,7 +47,7 @@ class WelcomeActivity: ComponentActivity() {
 }
 
 @Composable
-fun WelcomeView(navigator: NavHostController, textButton: String){
+fun WelcomeView(textButton: String){
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     Column(Modifier.statusBarsPadding().navigationBarsPadding().fillMaxSize()) {
@@ -69,11 +69,13 @@ fun WelcomeView(navigator: NavHostController, textButton: String){
             text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc sed maximus nisi. In felis ante, commodo in mi in, eleifend sodales dui. Suspendisse vestibulum turpis vel dapibus blandit.",
             modifier = Modifier.padding(horizontal = 15.dp).padding(top = screenHeight * 0.2f)
             )
+        val context = LocalContext.current
         FloatingActionButton(
             containerColor = Color(0xFF80E4FF),
             contentColor = Color.White,
             onClick = {
-                navigator.navigate("home")
+                val intent = Intent(context, MainActivity::class.java)
+                context.startActivity(intent)
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = screenWidth * 0.15f).padding(bottom = 15.dp).padding(top = screenHeight * 0.2f)
         ){
@@ -89,6 +91,6 @@ fun WelcomeView(navigator: NavHostController, textButton: String){
 @Preview(showBackground = true)
 @Composable
 fun WelcomePreview(){
-    WelcomeView(rememberNavController(), "Zaczynajmy")
+    WelcomeView("Zaczynajmy")
 }
 
