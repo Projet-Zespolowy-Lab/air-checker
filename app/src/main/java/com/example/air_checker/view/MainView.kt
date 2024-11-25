@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             locationViewModel.coordinates.collectLatest { coordinates ->
                 if (coordinates != null && isNetworkAvailable()) {
-                    stationsViewModel.fetchStations(52.538301, 19.742022)
+                    stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
                     stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
                 } else {
                     stationsViewModel.setNetworkError(true)

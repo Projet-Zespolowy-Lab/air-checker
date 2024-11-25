@@ -56,7 +56,7 @@ fun WelcomeView(textButton: String){
             modifier = Modifier.fillMaxWidth().padding(top = screenHeight * 0.1f)
         ){
             Image(
-                painter = painterResource(R.drawable.info_blue), // TODO Resource do logo
+                painter = painterResource(R.drawable.logo), // TODO Resource do logo
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.size(187.dp), // Wielkość ikony
