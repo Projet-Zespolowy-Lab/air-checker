@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
         // Obserwacja połączenia sieciowego
         observeNetworkConnectivity()
 
-        // Regularne pobieranie lokalizacji i stacji co minutę
+        // Regularne pobieranie lokalizacji i stacji co sekunde
         lifecycleScope.launch {
             while (true) {
                 if (isNetworkAvailable()) {
@@ -89,7 +89,8 @@ class MainActivity : ComponentActivity() {
                     stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
                     Log.d("MainActivity", "Brak połączenia z internetem")
                 }
-                delay(60000) // odświeżanie co minutę
+
+                delay(1000) // odświeżanie co sekunde
             }
         }
 
@@ -107,7 +108,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NearestStation(stationsViewModel = stationsViewModel,
-                               airQualityIndexViewModel = airQualityIndexViewModel)
+                airQualityIndexViewModel = airQualityIndexViewModel)
         }
     }
 
