@@ -79,7 +79,7 @@ class MainActivity : ComponentActivity() {
         observeNetworkConnectivity()
 
         // Do usunięcia po zaimplementowaniu https://github.com/Projet-Zespolowy-Lab/air-checker/issues/63
-        val filteredPlaces = filterPlacesByFirstLetter(places, "ło")
+        val filteredPlaces = filterPlacesByFirstLetter(places, "ka")
         filteredPlaces.forEach { Log.d("miasta", it.name + ", powiat " + it.county + ", woj." + it.voivodeship + ", " + it.lat + ", " + it.lon) }
         // Koniec do usunięcia
 
