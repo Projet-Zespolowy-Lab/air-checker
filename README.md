@@ -29,7 +29,7 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 - Zakończony research nt. odczytywania danych z GPS telefonu
 - Kolor w aplikacji zmienia się w zależności od jakości powietrza 
 
-## Piątek 29 lsitopada 20:30
+## Piątek 29 listopada 20:30
 - Ekran startowy z instrukcją użytkowania
 - Instrukcja jest też dostępna z wnętrza aplikacji
 
