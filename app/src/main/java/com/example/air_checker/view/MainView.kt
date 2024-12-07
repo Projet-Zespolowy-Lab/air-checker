@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,10 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -55,6 +51,7 @@ import com.example.air_checker.BuildConfig
 import com.example.air_checker.R
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.Station
+import com.example.air_checker.model.places
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
 import com.example.air_checker.viewModel.StationsViewModel
@@ -62,9 +59,11 @@ import com.example.air_checker.viewModel.getColor
 import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
+import com.example.air_checker.viewModel.filterPlacesByFirstLetter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+
 
 class MainActivity : ComponentActivity() {
     private val stationsViewModel: StationsViewModel by viewModels()
@@ -78,6 +77,12 @@ class MainActivity : ComponentActivity() {
 
         // Obserwacja połączenia sieciowego
         observeNetworkConnectivity()
+
+        // Do usunięcia po zaimplementowaniu https://github.com/Projet-Zespolowy-Lab/air-checker/issues/63
+        val filteredPlaces = filterPlacesByFirstLetter(places, "ka")
+        filteredPlaces.forEach { Log.d("miasta", it.name + ", powiat " + it.county + ", woj." + it.voivodeship + ", " + it.lat + ", " + it.lon) }
+        // Koniec do usunięcia
+
 
         // Regularne pobieranie lokalizacji i stacji co minutę
         lifecycleScope.launch {
