@@ -34,7 +34,7 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 - Instrukcja jest też dostępna z wnętrza aplikacji
 
 
-## Piątek 22 lsitopada 20:30
+## Piątek 22 listopada 20:30
 - Otagowanie i zreleasowanie wersji 1.0.0
 
 ## Piętek 15 listopada 20:30
