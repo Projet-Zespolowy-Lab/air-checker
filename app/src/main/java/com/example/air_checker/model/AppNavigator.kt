@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import com.example.air_checker.view.MainActivity
 import com.example.air_checker.view.WelcomeActivity
+import com.example.air_checker.view.TestActivity
 
 
 @SuppressLint("ComposableNaming")
@@ -36,6 +37,6 @@ fun NavigateTo(startDestination: String) {
     val context = LocalContext.current
     when(startDestination){
         "start" -> { context.startActivity(Intent(context, WelcomeActivity::class.java)) }
-        "home" -> { context.startActivity(Intent(context, MainActivity::class.java)) }
+        "home" -> { context.startActivity(Intent(context, TestActivity::class.java)) }
     }
 }
