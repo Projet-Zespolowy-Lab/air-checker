@@ -267,9 +267,9 @@ fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQ
         Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
             IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
             IndexField("PM 10", getQuality(airQuality, "PM10"))
-            IndexField("NO 2", getQuality(airQuality, "NO2"))
-            IndexField("SO 2", getQuality(airQuality, "SO2"))
-            IndexField("O 3", getQuality(airQuality, "O3"))
+            IndexField("NO₂", getQuality(airQuality, "NO2"))
+            IndexField("SO₂", getQuality(airQuality, "SO2"))
+            IndexField("O₃", getQuality(airQuality, "O3"))
 
         }
     }
