@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NearestStation(stationsViewModel = stationsViewModel,
-                airQualityIndexViewModel = airQualityIndexViewModel)
+                airQualityIndexViewModel = airQualityIndexViewModel, ::isNetworkAvailable)
         }
     }
 
@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NearestStation(stationsViewModel: StationsViewModel,
-                       airQualityIndexViewModel: AirQualityIndexViewModel)
+                       airQualityIndexViewModel: AirQualityIndexViewModel, isNetworkAvailable: ()->Boolean)
 {
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
     val networkError by stationsViewModel.networkError.observeAsState(false)
@@ -149,10 +149,16 @@ fun NearestStation(stationsViewModel: StationsViewModel,
                 Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
             }
         }
-    val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
-    nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
-    MainView(nearestStation, airQualityCategories)
-}}
+        val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
+        nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
+        if(isNetworkAvailable()){
+            MainView(nearestStation, airQualityCategories)
+        }
+        else{
+            MainView(Station(0, "",0.0,0.0),)
+        }
+    }
+}
 @Composable
 fun IndexField(indexName: String, indexValue: String){
     Row(modifier = Modifier.fillMaxWidth().height(30.dp)) {
