@@ -28,11 +28,16 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -185,15 +190,20 @@ fun IndexField(indexName: String, indexValue: String){
 
 @Preview(showBackground = true)
 @Composable
-fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQuality: AirQualityCategories? = AirQualityCategories(listOf())) {
+fun MainView(
+    nearestStation: Station? = Station(999, "Warsaw", 0.0, 0.0, 0.0),
+    airQuality: AirQualityCategories? = AirQualityCategories(listOf())
+) {
     val context = LocalContext.current
+    val selectedIndex = remember { mutableStateOf(0) } // Zapamiętuje wybraną zakładkę
+
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         Box(
             contentAlignment = Alignment.TopEnd,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 10.dp, end = 15.dp)
-        ){
+        ) {
             TextButton(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = CircleShape,
@@ -213,18 +223,25 @@ fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQ
                 )
             }
         }
+
         Spacer(Modifier.height(30.dp))
-        Box(modifier = Modifier.fillMaxWidth().size(240.dp).drawBehind {
-            drawCircle(
-                color = Color(getColor(getQuality(airQuality, "Krajowy indeks jakości powietrza"))),
-                radius = 320f
-            )
-            drawCircle(
-                color = Color(0xFFFFE9C9),
-                radius = 305f
-            )
-        }) {
-            Column(modifier = Modifier.align(Alignment.TopCenter)){
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .size(240.dp)
+                .drawBehind {
+                    drawCircle(
+                        color = Color(getColor(getQuality(airQuality, "Krajowy indeks jakości powietrza"))),
+                        radius = 320f
+                    )
+                    drawCircle(
+                        color = Color(0xFFFFE9C9),
+                        radius = 305f
+                    )
+                }
+        ) {
+            Column(modifier = Modifier.align(Alignment.TopCenter)) {
                 Text(
                     text = "AIR METER",
                     fontSize = 20.sp,
@@ -248,6 +265,7 @@ fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQ
                 )
             }
         }
+
         Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Image(
                 painter = painterResource(R.drawable.arrow),
@@ -263,15 +281,74 @@ fun MainView(nearestStation: Station? = Station(999, "Warsaw",0.0,0.0,0.0), airQ
                 fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
             )
         }
+
         Spacer(Modifier.height(50.dp))
+
         Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
             IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
             IndexField("PM 10", getQuality(airQuality, "PM10"))
             IndexField("NO₂", getQuality(airQuality, "NO2"))
             IndexField("SO₂", getQuality(airQuality, "SO2"))
             IndexField("O₃", getQuality(airQuality, "O3"))
-
         }
+
+        Spacer(Modifier.weight(1f)) // Dodanie odstępu między głównym widokiem a nawigacją
+
+        Nawigacja(selectedIndex.value) { index ->
+            selectedIndex.value = index
+        }
+    }
+}
+
+@Composable
+fun Nawigacja(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
+    NavigationBar(
+        containerColor = Color(0xFF80E4FF),
+        contentColor = Color.White,
+        modifier = Modifier.height(82.dp)
+    ) {
+        NavigationBarItem(
+            selected = selectedIndex == 0,
+            onClick = { onItemSelected(0) },
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.ic_home),
+                    contentDescription = "Home",
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            label = {
+                Text(text = "Home", fontSize = 10.sp)
+            }
+        )
+        NavigationBarItem(
+            selected = selectedIndex == 1,
+            onClick = { onItemSelected(1) },
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.ic_search),
+                    contentDescription = "Search",
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            label = {
+                Text(text = "Search", fontSize = 10.sp)
+            }
+        )
+        NavigationBarItem(
+            selected = selectedIndex == 2,
+            onClick = { onItemSelected(2) },
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.ic_profile),
+                    contentDescription = "Profile",
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            label = {
+                Text(text = "Profile", fontSize = 10.sp)
+            }
+        )
     }
 }
 
