@@ -37,6 +37,6 @@ fun NavigateTo(startDestination: String) {
     val context = LocalContext.current
     when(startDestination){
         "start" -> { context.startActivity(Intent(context, WelcomeActivity::class.java)) }
-        "home" -> { context.startActivity(Intent(context, TestActivity::class.java)) }
+        "home" -> { context.startActivity(Intent(context, MainActivity::class.java)) }
     }
 }
