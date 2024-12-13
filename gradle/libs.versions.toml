@@ -13,6 +13,8 @@ runtimeLivedata = "1.7.4"
 playServicesLocation = "21.3.0"
 appcompat = "1.7.0"
 material = "1.12.0"
+activity = "1.9.3"
+constraintlayout = "2.1.4"
 
 
 [libraries]
@@ -35,6 +37,8 @@ androidx-runtime-livedata = { group = "androidx.compose.runtime", name = "runtim
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 
 
 [plugins]
