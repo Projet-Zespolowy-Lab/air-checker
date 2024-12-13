@@ -24,6 +24,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -62,13 +63,15 @@ fun WelcomeView(textButton: String){
                 modifier = Modifier.size(187.dp), // Wielkość ikony
             )
         }
-        Text(
-            fontSize = 14.sp,
-            fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-            textAlign = TextAlign.Center,
-            text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc sed maximus nisi. In felis ante, commodo in mi in, eleifend sodales dui. Suspendisse vestibulum turpis vel dapibus blandit.",
-            modifier = Modifier.padding(horizontal = 15.dp).padding(top = screenHeight * 0.2f)
-            )
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(text = "Aplikacja pozwala zorientować ci się, jakiej jakości powietrze znajduje się wokół ciebie.\n")
+            Text(text = "Prezentuje Krajowy Indeks Jakości Powietrza oraz informacje o kluczowych wskaźnikach jakości powietrza:\n")
+            Text(text = "• PM 2.5 – drobne pyły zawieszone (średnica < 2,5 μm)")
+            Text(text = "• PM 10 – większe pyły zawieszone (średnica < 10 μm)")
+            Text(text = "• NO₂ (dwutlenek azotu)")
+            Text(text = "• SO₂ (dwutlenek siarki)")
+            Text(text = "• O₃ (ozon)")
+        }
         val context = LocalContext.current
         FloatingActionButton(
             containerColor = Color(0xFF80E4FF),
