@@ -1,8 +1,10 @@
 package com.example.air_checker.view
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -27,6 +29,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
@@ -45,6 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -56,12 +60,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.air_checker.BuildConfig
-import android.Manifest
-import android.content.pm.PackageManager
 import com.example.air_checker.R
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.Station
-import com.example.air_checker.model.places
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
 import com.example.air_checker.viewModel.StationsViewModel
@@ -72,7 +73,6 @@ import com.example.air_checker.viewModel.getQuality
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
-import com.example.air_checker.viewModel.filterPlacesByFirstLetter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -80,7 +80,6 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     private val stationsViewModel: StationsViewModel by viewModels()
-    private val locationViewModel: LocationViewModel by viewModels()
     private val airQualityIndexViewModel: AirQualityIndexViewModel by viewModels()
     private lateinit var locationClient: FusedLocationProviderClient
 
@@ -141,13 +140,6 @@ class MainActivity : ComponentActivity() {
         observeNetworkConnectivity()
 
 
-        // Regularne pobieranie lokalizacji i stacji co sekunde
-        // Do usunięcia po zaimplementowaniu https://github.com/Projet-Zespolowy-Lab/air-checker/issues/63
-        val filteredPlaces = filterPlacesByFirstLetter(places, "ka")
-        filteredPlaces.forEach { Log.d("miasta", it.name + ", powiat " + it.county + ", woj." + it.voivodeship + ", " + it.lat + ", " + it.lon) }
-        // Koniec do usunięcia
-
-
         // Regularne pobieranie lokalizacji i stacji co minutę
         lifecycleScope.launch {
             while (true) {
@@ -181,6 +173,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     // Funkcja nasłuchująca stanu połączenia sieciowego
     private fun observeNetworkConnectivity() {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -203,6 +196,8 @@ class MainActivity : ComponentActivity() {
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }
+
+
 
 @Composable
 fun NearestStation(stationsViewModel: StationsViewModel,
@@ -263,7 +258,7 @@ fun MainView(
     val context = LocalContext.current
     val selectedIndex = remember { mutableStateOf(0) } // Zapamiętuje wybraną zakładkę
 
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
         Box(
             contentAlignment = Alignment.TopEnd,
             modifier = Modifier
@@ -368,14 +363,21 @@ fun MainView(
 
 @Composable
 fun Nawigacja(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val context = LocalContext.current
     NavigationBar(
         containerColor = Color(0xFF80E4FF),
         contentColor = Color.White,
-        modifier = Modifier.height(82.dp)
+        modifier = Modifier.height(screenHeight * 0.09f)
     ) {
         NavigationBarItem(
             selected = selectedIndex == 0,
-            onClick = { onItemSelected(0) },
+            onClick = {
+                if(selectedIndex != 0){
+                    val intent = Intent(context, MainActivity::class.java)
+                    context.startActivity(intent)
+                }
+            },
             icon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_home),
@@ -389,7 +391,10 @@ fun Nawigacja(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
         )
         NavigationBarItem(
             selected = selectedIndex == 1,
-            onClick = { onItemSelected(1) },
+            onClick = {
+                val intent = Intent(context, ScreenActivity::class.java)
+                context.startActivity(intent)
+            },
             icon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_search),
