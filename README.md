@@ -25,14 +25,13 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 
 
 <br>
+
 ## Piątek 13 grudnia 20:30
 - Odczytywanie danych lokalizacyjnych z GPS...
 - zamiast używania Google geolocation API, które zostało usunięte
 - Dodanie paska menu
 - Dodanie wyszukiwarki miejscowości (WiP)
 - Logo i ikona aplikacji
-
-
 
 ## Piątek 6 grudnia 20:30
 - Zakończony research nt. odczytywania danych z GPS telefonu
