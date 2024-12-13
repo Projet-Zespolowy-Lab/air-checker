@@ -1,11 +1,13 @@
 package com.example.air_checker.view
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -51,8 +53,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.air_checker.BuildConfig
+import android.Manifest
+import android.content.pm.PackageManager
 import com.example.air_checker.R
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.Station
@@ -64,6 +69,9 @@ import com.example.air_checker.viewModel.getColor
 import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
 import com.example.air_checker.viewModel.filterPlacesByFirstLetter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -74,15 +82,66 @@ class MainActivity : ComponentActivity() {
     private val stationsViewModel: StationsViewModel by viewModels()
     private val locationViewModel: LocationViewModel by viewModels()
     private val airQualityIndexViewModel: AirQualityIndexViewModel by viewModels()
+    private lateinit var locationClient: FusedLocationProviderClient
+
+    @SuppressLint("MissingPermission")
+    private fun initUpdates(viewModel: LocationViewModel) {
+        locationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        locationClient.requestLocationUpdates(
+            createLocationRequest(),
+            {location -> viewModel.update(location.latitude, location.longitude)},
+            Looper.getMainLooper()
+        )
+    }
+
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1
+
+    private fun checkPermissions() {
+
+        if (!hasLocationPermissions()) {
+            requestLocationPermissions()
+            return
+        }
+    }
+
+    private fun requestLocationPermissions() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+            LOCATION_PERMISSION_REQUEST_CODE
+        )
+    }
+
+    private fun hasLocationPermissions(): Boolean {
+        return hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
+                hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+    }
+
+    private fun hasPermission(permission: String): Boolean {
+        val result = ActivityCompat.checkSelfPermission(this,permission);
+
+        return result == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private fun createLocationRequest(): LocationRequest {
+        return LocationRequest.Builder(1000).build()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         val apiKey = BuildConfig.API_KEY
 
+        checkPermissions()
+        val viewModel = LocationViewModel()
+
         // Obserwacja połączenia sieciowego
         observeNetworkConnectivity()
 
+
+        // Regularne pobieranie lokalizacji i stacji co sekunde
         // Do usunięcia po zaimplementowaniu https://github.com/Projet-Zespolowy-Lab/air-checker/issues/63
         val filteredPlaces = filterPlacesByFirstLetter(places, "ka")
         filteredPlaces.forEach { Log.d("miasta", it.name + ", powiat " + it.county + ", woj." + it.voivodeship + ", " + it.lat + ", " + it.lon) }
@@ -93,19 +152,20 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             while (true) {
                 if (isNetworkAvailable()) {
-                    locationViewModel.fetchLocation(apiKey)
+                    initUpdates(viewModel)
                     stationsViewModel.setNetworkError(false) // reset błędu sieci
                 } else {
                     stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
                     Log.d("MainActivity", "Brak połączenia z internetem")
                 }
-                delay(60000) // odświeżanie co minutę
+
+                delay(1000) // odświeżanie co sekunde
             }
         }
 
         lifecycleScope.launch {
-            locationViewModel.coordinates.collectLatest { coordinates ->
-                if (coordinates != null && isNetworkAvailable()) {
+            viewModel.state.collectLatest { coordinates ->
+                if (isNetworkAvailable()) {
                     stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
                     stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
                 } else {
@@ -117,7 +177,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             NearestStation(stationsViewModel = stationsViewModel,
-                               airQualityIndexViewModel = airQualityIndexViewModel)
+                airQualityIndexViewModel = airQualityIndexViewModel, ::isNetworkAvailable)
         }
     }
 
@@ -146,7 +206,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun NearestStation(stationsViewModel: StationsViewModel,
-                       airQualityIndexViewModel: AirQualityIndexViewModel)
+                       airQualityIndexViewModel: AirQualityIndexViewModel, isNetworkAvailable: ()->Boolean)
 {
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
     val networkError by stationsViewModel.networkError.observeAsState(false)
@@ -158,10 +218,16 @@ fun NearestStation(stationsViewModel: StationsViewModel,
                 Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
             }
         }
-    val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
-    nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
-    MainView(nearestStation, airQualityCategories)
-}}
+        val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
+        nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
+        if(isNetworkAvailable()){
+            MainView(nearestStation, airQualityCategories)
+        }
+        else{
+            MainView(Station(0, "",0.0,0.0),)
+        }
+    }
+}
 @Composable
 fun IndexField(indexName: String, indexValue: String){
     Row(modifier = Modifier.fillMaxWidth().height(30.dp)) {
