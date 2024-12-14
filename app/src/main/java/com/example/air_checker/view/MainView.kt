@@ -1,7 +1,5 @@
 package com.example.air_checker.view
 
-import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,7 +7,6 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.os.Bundle
-import android.os.Looper
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -57,7 +54,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.air_checker.BuildConfig
 import com.example.air_checker.R
@@ -66,13 +62,12 @@ import com.example.air_checker.model.Station
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
 import com.example.air_checker.viewModel.StationsViewModel
+import com.example.air_checker.viewModel.checkPermissions
 import com.example.air_checker.viewModel.getColor
 import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
+import com.example.air_checker.viewModel.initUpdates
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -81,51 +76,7 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
     private val stationsViewModel: StationsViewModel by viewModels()
     private val airQualityIndexViewModel: AirQualityIndexViewModel by viewModels()
-    private lateinit var locationClient: FusedLocationProviderClient
 
-    @SuppressLint("MissingPermission")
-    private fun initUpdates(viewModel: LocationViewModel) {
-        locationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        locationClient.requestLocationUpdates(
-            createLocationRequest(),
-            {location -> viewModel.update(location.latitude, location.longitude)},
-            Looper.getMainLooper()
-        )
-    }
-
-    private val LOCATION_PERMISSION_REQUEST_CODE = 1
-
-    private fun checkPermissions() {
-
-        if (!hasLocationPermissions()) {
-            requestLocationPermissions()
-            return
-        }
-    }
-
-    private fun requestLocationPermissions() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            LOCATION_PERMISSION_REQUEST_CODE
-        )
-    }
-
-    private fun hasLocationPermissions(): Boolean {
-        return hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
-                hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-    }
-
-    private fun hasPermission(permission: String): Boolean {
-        val result = ActivityCompat.checkSelfPermission(this,permission);
-
-        return result == PackageManager.PERMISSION_GRANTED;
-    }
-
-    private fun createLocationRequest(): LocationRequest {
-        return LocationRequest.Builder(1000).build()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -133,18 +84,17 @@ class MainActivity : ComponentActivity() {
 
         val apiKey = BuildConfig.API_KEY
 
-        checkPermissions()
+        checkPermissions(this)
         val viewModel = LocationViewModel()
 
         // Obserwacja połączenia sieciowego
         observeNetworkConnectivity()
 
-
         // Regularne pobieranie lokalizacji i stacji co minutę
         lifecycleScope.launch {
             while (true) {
                 if (isNetworkAvailable()) {
-                    initUpdates(viewModel)
+                    initUpdates(viewModel, this@MainActivity)
                     stationsViewModel.setNetworkError(false) // reset błędu sieci
                 } else {
                     stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
@@ -157,7 +107,7 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             viewModel.state.collectLatest { coordinates ->
-                if (isNetworkAvailable()) {
+                if (isNetworkAvailable() && coordinates.latitude != 0.0 && coordinates.longitude != 0.0) {
                     stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
                     stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
                 } else {
