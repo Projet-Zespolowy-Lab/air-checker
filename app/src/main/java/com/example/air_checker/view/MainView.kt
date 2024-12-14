@@ -2,6 +2,7 @@ package com.example.air_checker.view
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
@@ -43,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -120,6 +123,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+
     // Funkcja nasłuchująca stanu połączenia sieciowego
     private fun observeNetworkConnectivity() {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -142,6 +146,8 @@ class MainActivity : ComponentActivity() {
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }
+
+
 
 @Composable
 fun NearestStation(stationsViewModel: StationsViewModel,
@@ -202,7 +208,7 @@ fun MainView(
     val context = LocalContext.current
     val selectedIndex = remember { mutableStateOf(0) } // Zapamiętuje wybraną zakładkę
 
-    Column(Modifier.fillMaxSize().statusBarsPadding()) {
+    Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
         Box(
             contentAlignment = Alignment.TopEnd,
             modifier = Modifier
@@ -307,14 +313,21 @@ fun MainView(
 
 @Composable
 fun Nawigacja(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val context = LocalContext.current
     NavigationBar(
         containerColor = Color(0xFF80E4FF),
         contentColor = Color.White,
-        modifier = Modifier.height(82.dp)
+        modifier = Modifier.height(screenHeight * 0.09f)
     ) {
         NavigationBarItem(
             selected = selectedIndex == 0,
-            onClick = { onItemSelected(0) },
+            onClick = {
+                if(selectedIndex != 0){
+                    val intent = Intent(context, MainActivity::class.java)
+                    context.startActivity(intent)
+                }
+            },
             icon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_home),
@@ -328,7 +341,10 @@ fun Nawigacja(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
         )
         NavigationBarItem(
             selected = selectedIndex == 1,
-            onClick = { onItemSelected(1) },
+            onClick = {
+                val intent = Intent(context, ScreenActivity::class.java)
+                context.startActivity(intent)
+            },
             icon = {
                 Icon(
                     painter = painterResource(R.drawable.ic_search),
