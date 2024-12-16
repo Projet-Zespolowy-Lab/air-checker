@@ -119,7 +119,13 @@ class MainActivity : ComponentActivity() {
 
         /****Usunąć po implementacji odczytu i zapisu do bazy*********/
         // Dodanie nowego rekordu
-        val measure = Measure(krajowyIndeks = 78.3, kolor = "#0011AA")
+        val measure = Measure(nationalAirQualityIndex = 78.3,
+                              color = "#0011AA",
+                              pm10 = "Nieznany",
+                              pm25 = "Dobry",
+                              no2 = "Dobry",
+                              so2 = "Zły",
+                              o3 = "Nieznany")
         insertRecordToDatabase(this, measure)
 
         // Odczyt rekordów z bazy danych
@@ -127,7 +133,15 @@ class MainActivity : ComponentActivity() {
 
         // Logujemy każdy odczytany rekord
         measureHistory.history.forEach { measure ->
-            Log.d("baza", "ID: ${measure.id}, Index: ${measure.krajowyIndeks}, Kolor: ${measure.kolor}, Timestamp: ${measure.timestamp}")
+            Log.d("baza", "ID: ${measure.id}, " +
+                "Index: ${measure.nationalAirQualityIndex}, " +
+                "Kolor: ${measure.color}, " +
+                "PM10: ${measure.pm10}, " +
+                "PM2.5: ${measure.pm25}, " +
+                "NO2: ${measure.no2}, " +
+                "SO2: ${measure.so2}, " +
+                "O3: ${measure.o3}, " +
+                "Timestamp: ${measure.timestamp}")
         }
         /***********Koniec usunąć************************************/
 
