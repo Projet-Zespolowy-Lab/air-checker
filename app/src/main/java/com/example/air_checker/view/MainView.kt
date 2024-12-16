@@ -68,6 +68,7 @@ import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.initUpdates
 import getDatabase
+import insertRecordToDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -119,6 +120,9 @@ class MainActivity : ComponentActivity() {
         //Usunąć po implementacji odczytu i zapisu do bazy
         val dbName = "air_checker.db"
         getDatabase(this, dbName)
+        // Dodanie nowego rekordu
+        insertRecordToDatabase(this, 42.5, "#FF5733")
+
         val records = readRecordsFromDatabase(this)
 
         // Wyświetlenie rekordów w konsoli
