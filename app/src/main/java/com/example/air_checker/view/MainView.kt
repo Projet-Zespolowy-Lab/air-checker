@@ -2,7 +2,6 @@ package com.example.air_checker.view
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -68,9 +67,11 @@ import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.initUpdates
+import getDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import readRecordsFromDatabase
 
 
 class MainActivity : ComponentActivity() {
@@ -81,8 +82,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        val apiKey = BuildConfig.API_KEY
 
         checkPermissions(this)
         val viewModel = LocationViewModel()
@@ -117,9 +116,23 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        //Usunąć po implementacji odczytu i zapisu do bazy
+        val dbName = "air_checker.db"
+        getDatabase(this, dbName)
+        val records = readRecordsFromDatabase(this)
+
+        // Wyświetlenie rekordów w konsoli
+        records.forEach { record ->
+            Log.d("baza","Rekord: $record")
+        }
+        //Koniec usunąć
+
         setContent {
             NearestStation(stationsViewModel = stationsViewModel,
                 airQualityIndexViewModel = airQualityIndexViewModel, ::isNetworkAvailable)
+            records.forEach { record ->
+                Text(text = "Rekord: $record")
+            }
         }
     }
 
