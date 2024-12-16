@@ -1,9 +1,16 @@
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.util.Log
+import com.example.air_checker.database.Measure
+import com.example.air_checker.database.MeasureHistory
 import java.io.FileOutputStream
 
-fun getDatabase(context: Context, dbName: String): SQLiteDatabase {
+// Nazwa bazy danych
+// Fizycznie plik jest w .../air-checker/app/src/main/assets/air_checker.db
+const val dbName = "air_checker.db"
+
+fun getDatabase(context: Context): SQLiteDatabase {
+
   val dbFile = context.getDatabasePath(dbName)
 
   Log.d("baza","Baza danych znajduje się pod ścieżką: ${dbFile.absolutePath}")
@@ -22,33 +29,34 @@ fun getDatabase(context: Context, dbName: String): SQLiteDatabase {
 }
 
 
-fun readRecordsFromDatabase(context: Context): List<Map<String, Any>> {
+fun readRecordsFromDatabase(context: Context): MeasureHistory {
   val dbName = "air_checker.db"
   val dbPath = context.getDatabasePath(dbName).absolutePath
   val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
   val cursor = db.rawQuery("SELECT ID, krajowyIndeks, kolor, timestamp FROM MeasureHistory", null)
-  val results = mutableListOf<Map<String, Any>>()
+  val measures = mutableListOf<Measure>()
 
   // Iteracja przez rekordy
   while (cursor.moveToNext()) {
-    val record = mapOf(
-      "id" to cursor.getInt(cursor.getColumnIndexOrThrow("id")),
-      "krajowyIndeks" to cursor.getDouble(cursor.getColumnIndexOrThrow("krajowyIndeks")),
-      "kolor" to cursor.getString(cursor.getColumnIndexOrThrow("kolor")),
-      "timestamp" to cursor.getString(cursor.getColumnIndexOrThrow("timestamp"))
-    )
-    results.add(record)
+    val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+    val krajowyIndeks = cursor.getDouble(cursor.getColumnIndexOrThrow("krajowyIndeks"))
+    val kolor = cursor.getString(cursor.getColumnIndexOrThrow("kolor"))
+    val timestamp = cursor.getString(cursor.getColumnIndexOrThrow("timestamp"))
+
+    // Tworzymy obiekt Measure i dodajemy do listy
+    measures.add(Measure(id, krajowyIndeks, kolor, timestamp))
   }
 
   cursor.close()
   db.close()
-  return results
+
+  // Zwracamy jako MeasureHistory
+  return MeasureHistory(measures)
 }
 
 fun insertRecordToDatabase(context: Context, krajowyIndeks: Double, kolor: String) {
-  val dbName = "air_checker.db"
-  val db = getDatabase(context, dbName)  // Otwórz bazę danych do zapisu
+  val db = getDatabase(context)  // Otwórz bazę danych do zapisu
 
   val query = """
         INSERT INTO MeasureHistory (krajowyIndeks, kolor)
