@@ -55,7 +55,7 @@ fun readRecordsFromDatabase(context: Context): MeasureHistory {
   return MeasureHistory(measures)
 }
 
-fun insertRecordToDatabase(context: Context, krajowyIndeks: Double, kolor: String) {
+fun insertRecordToDatabase(context: Context, measure: Measure) {
   val db = getDatabase(context)  // Otwórz bazę danych do zapisu
 
   val query = """
@@ -64,8 +64,8 @@ fun insertRecordToDatabase(context: Context, krajowyIndeks: Double, kolor: Strin
     """.trimIndent()
 
   val statement = db.compileStatement(query)
-  statement.bindDouble(1, krajowyIndeks)
-  statement.bindString(2, kolor)
+  statement.bindDouble(1, measure.krajowyIndeks)
+  statement.bindString(2, measure.kolor)
 
   statement.executeInsert()  // Wykonanie zapytania
   db.close()

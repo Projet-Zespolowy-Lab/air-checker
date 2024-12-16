@@ -54,8 +54,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.example.air_checker.BuildConfig
 import com.example.air_checker.R
+import com.example.air_checker.database.Measure
 import com.example.air_checker.database.MeasureHistory
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.Station
@@ -68,7 +68,6 @@ import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.initUpdates
-import getDatabase
 import insertRecordToDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -119,9 +118,9 @@ class MainActivity : ComponentActivity() {
         }
 
         /****Usunąć po implementacji odczytu i zapisu do bazy*********/
-//        getDatabase(this)
         // Dodanie nowego rekordu
-        insertRecordToDatabase(this, 42.5, "#FF5733")
+        val measure = Measure(krajowyIndeks = 78.3, kolor = "#0011AA")
+        insertRecordToDatabase(this, measure)
 
         // Odczyt rekordów z bazy danych
         val measureHistory: MeasureHistory = readRecordsFromDatabase(this)
