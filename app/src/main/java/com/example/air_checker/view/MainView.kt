@@ -2,7 +2,6 @@ package com.example.air_checker.view
 
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
@@ -55,8 +54,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.example.air_checker.BuildConfig
 import com.example.air_checker.R
+import com.example.air_checker.database.Measure
+import com.example.air_checker.database.MeasureHistory
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.Station
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
@@ -68,9 +68,11 @@ import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.initUpdates
+import insertRecordToDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import readRecordsFromDatabase
 
 
 class MainActivity : ComponentActivity() {
@@ -81,8 +83,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        val apiKey = BuildConfig.API_KEY
 
         checkPermissions(this)
         val viewModel = LocationViewModel()
@@ -116,6 +116,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        /****Usunąć po implementacji odczytu i zapisu do bazy*********/
+        // Dodanie nowego rekordu
+        val measure = Measure(krajowyIndeks = 78.3, kolor = "#0011AA")
+        insertRecordToDatabase(this, measure)
+
+        // Odczyt rekordów z bazy danych
+        val measureHistory: MeasureHistory = readRecordsFromDatabase(this)
+
+        // Logujemy każdy odczytany rekord
+        measureHistory.history.forEach { measure ->
+            Log.d("baza", "ID: ${measure.id}, Index: ${measure.krajowyIndeks}, Kolor: ${measure.kolor}, Timestamp: ${measure.timestamp}")
+        }
+        /***********Koniec usunąć************************************/
+
 
         setContent {
             NearestStation(stationsViewModel = stationsViewModel,
