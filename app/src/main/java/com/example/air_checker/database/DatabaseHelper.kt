@@ -87,3 +87,19 @@ fun insertRecordToDatabase(context: Context, measure: Measure) {
   Log.d("baza", "Nowy rekord został dodany do bazy danych.")
 }
 
+
+fun deleteFromDatabase(context: Context, id: Int) {
+  val db = getDatabase(context)  // Otwórz bazę danych do zapisu
+
+  val query = """DELETE FROM MeasureHistory WHERE ID = ?""".trimIndent()
+
+  val statement = db.compileStatement(query)
+  statement.bindString(1, id.toString())
+
+
+  statement.executeUpdateDelete()  // Wykonanie zapytania
+  db.close()
+
+  Log.d("baza",  "Rekord o id $id został usunięty z bazy danych, o ile istniał.")
+}
+
