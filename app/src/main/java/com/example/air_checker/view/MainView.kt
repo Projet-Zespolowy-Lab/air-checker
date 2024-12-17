@@ -71,6 +71,7 @@ import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.initUpdates
+import deleteFromDatabase
 import insertRecordToDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -132,10 +133,13 @@ class MainActivity : ComponentActivity() {
             no2 = "Dobry",
             so2 = "Zły",
             o3 = "Nieznany")
-insertRecordToDatabase(this, measure)
+        insertRecordToDatabase(this, measure)
 
         // Odczyt rekordów z bazy danych
         val measureHistory: MeasureHistory = readRecordsFromDatabase(this)
+
+        //Usuwanie z bazy po ID
+        deleteFromDatabase(this, id=5)
 
         // Logujemy każdy odczytany rekord
         measureHistory.history.forEach { measure ->
@@ -152,6 +156,7 @@ insertRecordToDatabase(this, measure)
                 "O3: ${measure.o3}, " +
                 "Timestamp: ${measure.timestamp}")
         }
+
         /***********Koniec usunąć************************************/
 
 
