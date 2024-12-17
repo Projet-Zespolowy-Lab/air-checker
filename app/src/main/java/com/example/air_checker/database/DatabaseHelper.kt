@@ -34,24 +34,25 @@ fun readRecordsFromDatabase(context: Context): MeasureHistory {
   val dbPath = context.getDatabasePath(dbName).absolutePath
   val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
-  val cursor = db.rawQuery("SELECT ID, nationalAirQualityIndex, color, pm10, pm25, no2, so2, o3, timestamp FROM MeasureHistory", null)
+  val cursor = db.rawQuery("SELECT ID, place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3, timestamp FROM MeasureHistory", null)
   val measures = mutableListOf<Measure>()
 
   // Iteracja przez rekordy
   while (cursor.moveToNext()) {
     val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
-    val airQualityIndex = cursor.getDouble(cursor.getColumnIndexOrThrow("nationalAirQualityIndex"))
+    val place = cursor.getString(cursor.getColumnIndexOrThrow("place"))
+    val qualityIndex = cursor.getDouble(cursor.getColumnIndexOrThrow("qualityIndex"))
+    val qualityCategory = cursor.getString(cursor.getColumnIndexOrThrow("qualityCategory"))
     val color = cursor.getString(cursor.getColumnIndexOrThrow("color"))
     val pm10 = cursor.getString(cursor.getColumnIndexOrThrow("pm10"))
     val pm25 = cursor.getString(cursor.getColumnIndexOrThrow("pm25"))
     val no2 = cursor.getString(cursor.getColumnIndexOrThrow("no2"))
     val so2 = cursor.getString(cursor.getColumnIndexOrThrow("so2"))
     val o3 = cursor.getString(cursor.getColumnIndexOrThrow("o3"))
-
     val timestamp = cursor.getString(cursor.getColumnIndexOrThrow("timestamp"))
 
     // Tworzymy obiekt Measure i dodajemy do listy
-    measures.add(Measure(id, airQualityIndex, color, pm10, pm25, no2, so2, o3, timestamp))
+    measures.add(Measure(id, place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3, timestamp))
   }
 
   cursor.close()
@@ -65,18 +66,20 @@ fun insertRecordToDatabase(context: Context, measure: Measure) {
   val db = getDatabase(context)  // Otwórz bazę danych do zapisu
 
   val query = """
-        INSERT INTO MeasureHistory (nationalAirQualityIndex, color, pm10, pm25, no2, so2, o3)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO MeasureHistory (place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """.trimIndent()
 
   val statement = db.compileStatement(query)
-  measure.nationalAirQualityIndex?.let { statement.bindDouble(1, it) }
-  statement.bindString(2, measure.color)
-  statement.bindString(3, measure.pm10)
-  statement.bindString(4, measure.pm25)
-  statement.bindString(5, measure.no2)
-  statement.bindString(6, measure.so2)
-  statement.bindString(7, measure.o3)
+  statement.bindString(1, measure.place)
+  measure.qualityIndex?.let { statement.bindDouble(2, it) }
+  statement.bindString(3, measure.qualityCategory)
+  statement.bindString(4, measure.color)
+  statement.bindString(5, measure.pm10)
+  statement.bindString(6, measure.pm25)
+  statement.bindString(7, measure.no2)
+  statement.bindString(8, measure.so2)
+  statement.bindString(9, measure.o3)
 
   statement.executeInsert()  // Wykonanie zapytania
   db.close()

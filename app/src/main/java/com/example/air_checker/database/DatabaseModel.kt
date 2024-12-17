@@ -4,7 +4,9 @@ import com.example.air_checker.model.AirQualityIndex
 
 data class Measure(
   val id: Int? = null,
-  val nationalAirQualityIndex: Double? = null,
+  val place: String? = null,
+  val qualityIndex: Double? = null,
+  val qualityCategory: String? = null,
   val color: String? = null,
   val pm10: String? = null,
   val pm25: String? = null,

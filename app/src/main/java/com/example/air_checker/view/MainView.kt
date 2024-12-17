@@ -60,6 +60,7 @@ import com.example.air_checker.R
 import com.example.air_checker.database.Measure
 import com.example.air_checker.database.MeasureHistory
 import com.example.air_checker.model.AirQualityCategories
+import com.example.air_checker.model.Place
 import com.example.air_checker.model.Station
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
@@ -121,22 +122,28 @@ class MainActivity : ComponentActivity() {
 
         /****Usunąć po implementacji odczytu i zapisu do bazy*********/
         // Dodanie nowego rekordu
-        val measure = Measure(nationalAirQualityIndex = 78.3,
-                              color = "#0011AA",
-                              pm10 = "Nieznany",
-                              pm25 = "Dobry",
-                              no2 = "Dobry",
-                              so2 = "Zły",
-                              o3 = "Nieznany")
-        insertRecordToDatabase(this, measure)
+        val measure = Measure(
+            place = "Jana Pawła II, Łódź",
+            qualityIndex = 78.3,
+            qualityCategory = "Dobry",
+            color = "#0011AA",
+            pm10 = "Nieznany",
+            pm25 = "Dobry",
+            no2 = "Dobry",
+            so2 = "Zły",
+            o3 = "Nieznany")
+insertRecordToDatabase(this, measure)
 
         // Odczyt rekordów z bazy danych
         val measureHistory: MeasureHistory = readRecordsFromDatabase(this)
 
         // Logujemy każdy odczytany rekord
         measureHistory.history.forEach { measure ->
-            Log.d("baza", "ID: ${measure.id}, " +
-                "Index: ${measure.nationalAirQualityIndex}, " +
+            Log.d("baza",
+                 "ID: ${measure.id}, " +
+                "Place: ${measure.place}, " +
+                "Index: ${measure.qualityIndex}, " +
+                "Cat: ${measure.qualityCategory}, " +
                 "Kolor: ${measure.color}, " +
                 "PM10: ${measure.pm10}, " +
                 "PM2.5: ${measure.pm25}, " +
