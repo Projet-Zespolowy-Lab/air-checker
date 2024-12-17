@@ -1,6 +1,10 @@
+-- sqlite3 air_checker.db
+
 CREATE TABLE MeasureHistory (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    nationalAirQualityIndex REAL,
+    place TEXT,
+    qualityIndex REAL,
+    qualityCategory TEXT,
     color TEXT,
     pm10 TEXT,
     pm25 TEXT,
