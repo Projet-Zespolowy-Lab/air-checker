@@ -115,9 +115,5 @@ fun ScreenView() {
                 }
             }
         }
-
-        Nawigacja(selectedIndex.value) { index ->
-            selectedIndex.value = index
-        }
     }
 }
