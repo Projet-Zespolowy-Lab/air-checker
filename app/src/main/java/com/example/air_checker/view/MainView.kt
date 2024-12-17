@@ -12,6 +12,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,10 +30,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -334,71 +336,89 @@ fun MainView(
 
         Spacer(Modifier.weight(1f)) // Dodanie odstępu między głównym widokiem a nawigacją
 
-        Nawigacja(selectedIndex.value) { index ->
+        NavMenu(selectedIndex.value) { index ->
             selectedIndex.value = index
         }
     }
 }
 
 @Composable
-fun Nawigacja(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
+fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val context = LocalContext.current
-    NavigationBar(
-        containerColor = Color(0xFF80E4FF),
-        contentColor = Color.White,
-        modifier = Modifier.height(screenHeight * 0.09f)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        NavigationBarItem(
-            selected = selectedIndex == 0,
-            onClick = {
-                if(selectedIndex != 0){
-                    val intent = Intent(context, MainActivity::class.java)
-                    context.startActivity(intent)
-                }
-            },
-            icon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_home),
-                    contentDescription = "Home",
-                    modifier = Modifier.size(20.dp)
+        Spacer(modifier = Modifier.height(24.dp)) // Przestrzeń nad paskiem menu
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f) // Pasek zajmuje 80% szerokości ekranu
+                .height(screenHeight * 0.075f)
+                .clip(RoundedCornerShape(50.dp)) // Zaokrąglenie rogów
+                .background(Color(0xFF80E4FF)) // Kolor tła paska
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween, // Równomierne rozmieszczenie elementów
+                verticalAlignment = Alignment.CenterVertically // Wycentrowanie wertykalne
+            ) {
+                // Przycisk Home
+                NavMenuItem(
+                    isSelected = selectedIndex == 0,
+                    icon = R.drawable.ic_home,
+                    onClick = {
+                        if (selectedIndex != 0) {
+                            val intent = Intent(context, MainActivity::class.java)
+                            context.startActivity(intent)
+                        }
+                    }
                 )
-            },
-            label = {
-                Text(text = "Home", fontSize = 10.sp)
-            }
-        )
-        NavigationBarItem(
-            selected = selectedIndex == 1,
-            onClick = {
-                val intent = Intent(context, ScreenActivity::class.java)
-                context.startActivity(intent)
-            },
-            icon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_search),
-                    contentDescription = "Search",
-                    modifier = Modifier.size(20.dp)
+
+                // Przycisk Search
+                NavMenuItem(
+                    isSelected = selectedIndex == 1,
+                    icon = R.drawable.ic_search,
+                    onClick = {
+                        val intent = Intent(context, ScreenActivity::class.java)
+                        context.startActivity(intent)
+                    }
                 )
-            },
-            label = {
-                Text(text = "Search", fontSize = 10.sp)
-            }
-        )
-        NavigationBarItem(
-            selected = selectedIndex == 2,
-            onClick = { onItemSelected(2) },
-            icon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_profile),
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(20.dp)
+
+                // Przycisk Info
+                NavMenuItem(
+                    isSelected = selectedIndex == 2,
+                    icon = R.drawable.info,
+                    onClick = { onItemSelected(2) }
                 )
-            },
-            label = {
-                Text(text = "Profile", fontSize = 10.sp)
             }
-        )
+        }
+
+        Spacer(modifier = Modifier.height(40.dp)) // Przestrzeń pod paskiem menu
     }
 }
 
+@Composable
+fun NavMenuItem(isSelected: Boolean, icon: Int, onClick: () -> Unit) {
+    Box(
+        contentAlignment = Alignment.Center, // Wycentrowanie zawartości w Box
+        modifier = Modifier
+            .size(50.dp) // Rozmiar okrągłego przycisku
+            .clip(CircleShape) // Zaokrąglenie krawędzi
+            .background(if (isSelected) Color.White else Color.Transparent) // Tło zaznaczonego elementu
+            .clickable { onClick() } // Obsługa kliknięcia
+    ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = if (isSelected) Color.Black else Color.Black.copy(alpha = 0.6f), // Kolor ikony
+            modifier = Modifier.size(30.dp) // Rozmiar ikony
+        )
+    }
+}
