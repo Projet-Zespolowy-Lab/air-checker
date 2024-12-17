@@ -1,6 +1,3 @@
-import java.io.FileInputStream
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,39 +18,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildFeatures {
-        buildConfig = true
-    }
-
-    buildTypes {
-        getByName("debug") {
-            // Odczytaj `local.properties`
-            val localProperties = Properties()
-            val localPropertiesFile = rootProject.file("local.properties")
-            if (localPropertiesFile.exists()) {
-                localProperties.load(FileInputStream(localPropertiesFile))
-            }
-
-            val mySecretKey = localProperties.getProperty("API_KEY") ?: ""
-
-            // Ustawienie sekretu w BuildConfig
-            buildConfigField("String", "API_KEY", "\"$mySecretKey\"")
-        }
-
-        getByName("release") {
-            // Odczytaj `local.properties`
-            val localProperties = Properties()
-            val localPropertiesFile = rootProject.file("local.properties")
-            if (localPropertiesFile.exists()) {
-                localProperties.load(FileInputStream(localPropertiesFile))
-            }
-
-            val mySecretKey = localProperties.getProperty("API_KEY") ?: ""
-
-            // Ustawienie sekretu w BuildConfig
-            buildConfigField("String", "API_KEY", "\"$mySecretKey\"")
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
