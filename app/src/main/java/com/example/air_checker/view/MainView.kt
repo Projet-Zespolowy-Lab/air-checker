@@ -62,6 +62,7 @@ import com.example.air_checker.database.MeasureHistory
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.Place
 import com.example.air_checker.model.Station
+import com.example.air_checker.model.places
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
 import com.example.air_checker.viewModel.StationsViewModel
@@ -72,6 +73,7 @@ import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.initUpdates
 import deleteFromDatabase
+import fetchAllPlaces
 import insertRecordToDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -90,6 +92,9 @@ class MainActivity : ComponentActivity() {
 
         checkPermissions(this)
         val viewModel = LocationViewModel()
+
+        //Załadowanie danych miejscowości
+        places = fetchAllPlaces(this)
 
         // Obserwacja połączenia sieciowego
         observeNetworkConnectivity()
