@@ -6,4 +6,3 @@ fun filterPlacesByFirstLetter(places: List<Place>, query: String): List<Place> {
         .filter { it.name.startsWith(query, ignoreCase = true) }
         .sortedBy { it.name }
 }
-

@@ -3,6 +3,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.util.Log
 import com.example.air_checker.database.Measure
 import com.example.air_checker.database.MeasureHistory
+import com.example.air_checker.model.Place
 import java.io.FileOutputStream
 
 // Nazwa bazy danych
@@ -103,3 +104,28 @@ fun deleteFromDatabase(context: Context, id: Int) {
   Log.d("baza",  "Rekord o id $id został usunięty z bazy danych, o ile istniał.")
 }
 
+fun fetchAllPlaces(context: Context): List<Place> {
+  val db = getDatabase(context)  // Otwórz bazę danych do zapisu
+  val places = mutableListOf<Place>()
+
+  val query = "SELECT name, district, voivodeship, lat, lon FROM Places;"
+
+  val cursor = db.rawQuery(query, null)
+
+  cursor.use { cursor ->
+    if (cursor.moveToFirst()) {
+      do {
+        val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+        val district = cursor.getString(cursor.getColumnIndexOrThrow("district"))
+        val voivodeship = cursor.getString(cursor.getColumnIndexOrThrow("voivodeship"))
+        val lat = cursor.getDouble(cursor.getColumnIndexOrThrow("lat"))
+        val lon = cursor.getDouble(cursor.getColumnIndexOrThrow("lon"))
+
+        val place = Place(name, district, voivodeship, lat, lon)
+        places.add(place)
+      } while (cursor.moveToNext())
+    }
+  }
+  db.close()
+  return places
+}
