@@ -4,15 +4,28 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Looper
+import android.util.Log
+import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.IndexColors
 import com.example.air_checker.model.Station
+import com.example.air_checker.view.MainActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+
 
 fun getNameNearestStation(nearestStation: Station?): String {
     nearestStation.let { station ->
