@@ -1,5 +1,7 @@
 package com.example.air_checker.model
 
+import java.io.Serializable
+
 data class Place(
   val name: String,
   val county: String,

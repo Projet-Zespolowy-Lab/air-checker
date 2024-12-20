@@ -94,25 +94,54 @@ class MainActivity : ComponentActivity() {
         // Obserwacja połączenia sieciowego
         observeNetworkConnectivity()
 
-        // Regularne pobieranie lokalizacji i stacji co minutę
-        lifecycleScope.launch {
-            while (true) {
-                if (isNetworkAvailable()) {
-                    initUpdates(viewModel, this@MainActivity)
-                    stationsViewModel.setNetworkError(false) // reset błędu sieci
-                } else {
-                    stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
-                    Log.d("MainActivity", "Brak połączenia z internetem")
-                }
+        if(intent.getStringExtra("wybrane_miasto_nazwa") == null){
+            // Regularne pobieranie lokalizacji i stacji co sekunde
+            lifecycleScope.launch {
+                while (true) {
+                    if (isNetworkAvailable()) {
+                        initUpdates(viewModel, this@MainActivity)
+                        stationsViewModel.setNetworkError(false) // reset błędu sieci
+                    } else {
+                        stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
+                        Log.d("MainActivity", "Brak połączenia z internetem")
+                    }
 
-                delay(1000) // odświeżanie co sekunde
+                    delay(1000) // odświeżanie co sekunde
+                }
+            }
+
+            lifecycleScope.launch {
+                viewModel.state.collectLatest { coordinates ->
+                    if (isNetworkAvailable() && coordinates.latitude != 0.0 && coordinates.longitude != 0.0) {
+                        stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
+                        stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
+                    } else {
+                        stationsViewModel.setNetworkError(true)
+                        Log.d("MainActivity", "Brak połączenia lub brak współrzędnych")
+                    }
+                }
             }
         }
+        else
+        {
+            // Regularne pobieranie lokalizacji i stacji co sekunde
+            lifecycleScope.launch {
+                while (true) {
+                    if (isNetworkAvailable()) {
+                        stationsViewModel.setNetworkError(false) // reset błędu sieci
+                    } else {
+                        stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
+                        Log.d("MainActivity", "Brak połączenia z internetem")
+                    }
 
-        lifecycleScope.launch {
-            viewModel.state.collectLatest { coordinates ->
-                if (isNetworkAvailable() && coordinates.latitude != 0.0 && coordinates.longitude != 0.0) {
-                    stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
+                    delay(1000) // odświeżanie co sekunde
+                }
+            }
+            lifecycleScope.launch {
+                if (isNetworkAvailable()) {
+                    stationsViewModel.fetchStations(
+                        intent.getDoubleExtra("wybrane_miasto_lat", 0.0), intent.getDoubleExtra("wybrane_miasto_lon", 0.0)
+                    )
                     stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
                 } else {
                     stationsViewModel.setNetworkError(true)
