@@ -1,6 +1,3 @@
-import java.io.FileInputStream
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -13,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.air_checker"
-        minSdk = 24
+        minSdk = 29
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -21,39 +18,6 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildFeatures {
-        buildConfig = true
-    }
-
-    buildTypes {
-        getByName("debug") {
-            // Odczytaj `local.properties`
-            val localProperties = Properties()
-            val localPropertiesFile = rootProject.file("local.properties")
-            if (localPropertiesFile.exists()) {
-                localProperties.load(FileInputStream(localPropertiesFile))
-            }
-
-            val mySecretKey = localProperties.getProperty("API_KEY") ?: ""
-
-            // Ustawienie sekretu w BuildConfig
-            buildConfigField("String", "API_KEY", "\"$mySecretKey\"")
-        }
-
-        getByName("release") {
-            // Odczytaj `local.properties`
-            val localProperties = Properties()
-            val localPropertiesFile = rootProject.file("local.properties")
-            if (localPropertiesFile.exists()) {
-                localProperties.load(FileInputStream(localPropertiesFile))
-            }
-
-            val mySecretKey = localProperties.getProperty("API_KEY") ?: ""
-
-            // Ustawienie sekretu w BuildConfig
-            buildConfigField("String", "API_KEY", "\"$mySecretKey\"")
-        }
-    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -67,7 +31,7 @@ android {
 }
 
 dependencies {
-
+    implementation(libs.play.services.location)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -77,6 +41,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.runtime.livedata)
+    implementation("androidx.navigation:navigation-compose:2.8.4")
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
