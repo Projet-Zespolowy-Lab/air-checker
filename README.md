@@ -18,13 +18,18 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 - Figma
 - ~~Google geolocation API~~
 - API Głównego Inspektoratu Ochrony Środowiska (https://powietrze.gios.gov.pl/pjp/content/api)
-- Replit
+- ~~Replit~~ - używany do mockowania testów
 - Miro
 - Python do obróbki danych miejscowości
 - [Dane miejscowości](https://github.com/jjbartek/polskie-miejscowosci?tab=CC0-1.0-1-ov-file)
 
 
 <br>
+
+## Sobota 21 grudnia 13:00
+- Zrelesowanie wersji 1.4.2
+- Rozplanowanie zadań odn. do zapisu historii pomiarów...
+- ... i eksportu historii
 
 ## Piątek 13 grudnia 20:30
 - Odczytywanie danych lokalizacyjnych z GPS...
