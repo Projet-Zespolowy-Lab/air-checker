@@ -13,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,7 +46,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -52,7 +57,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
@@ -250,29 +257,58 @@ fun NearestStation(stationsViewModel: StationsViewModel,
         }
     }
 }
+
 @Composable
-fun IndexField(indexName: String, indexValue: String){
-    Row(modifier = Modifier.fillMaxWidth().height(30.dp)) {
-        Spacer(Modifier.width(10.dp))
-        Image(
-            painter = painterResource(R.drawable.info_blue),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.size(30.dp)
-        )
-        Spacer(Modifier.width(10.dp))
-        Text(
-            text = indexName,
-            fontSize = 20.sp,
-            fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal))
-        )
-        Spacer(Modifier.weight(0.8f))
-        Text(
-            text = indexValue,
-            fontSize = 20.sp,
-            fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-            modifier = Modifier.align(Alignment.CenterVertically).offset(x = (-10).dp)
-        )
+fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(30.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier
+                .width(fieldWidth)
+                .height(30.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(R.drawable.info),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.size(20.dp),
+                colorFilter = ColorFilter.tint(Color(0xFF3F3F3F))
+            )
+            Spacer(Modifier.width(5.dp))
+            Text(
+                text = indexName,
+                fontSize = 20.sp,
+                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                color = Color(0xFF3F3F3F)
+            )
+            Spacer(Modifier.weight(0.8f))
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .size(width = 45.dp, height = 40.dp) // Stały rozmiar obramowania
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFF80E4FF), // Kolor obramowania
+                        shape = RoundedCornerShape(10.dp) // Zaokrąglone rogi
+                    ),
+                contentAlignment = Alignment.Center // Wyrównanie tekstu w środku
+            ) {
+                Text(
+                    text = indexValue,
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFF3F3F3F), // Kolor tekstu
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }
 
@@ -286,16 +322,37 @@ fun MainView(
     val selectedIndex = remember { mutableStateOf(0) } // Zapamiętuje wybraną zakładkę
 
     Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
-        Box(
-            contentAlignment = Alignment.TopEnd,
+        // Przycisk po prawej stronie (oryginalny kod)
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, end = 15.dp)
+                .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
+            horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
         ) {
+            // Przycisk po lewej stronie
             TextButton(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                shape = CircleShape,
-                modifier = Modifier.size(31.dp),
+                shape = RectangleShape,
+                modifier = Modifier.size(30.dp),
+                contentPadding = PaddingValues(0.dp),
+                onClick = {
+                    // Działanie przy kliknięciu
+                },
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxSize()
+                )
+            }
+
+            // Przycisk po prawej stronie
+            TextButton(
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                shape = RectangleShape,
+                modifier = Modifier.size(30.dp),
                 contentPadding = PaddingValues(0.dp),
                 onClick = {
                     val intent = Intent(context, WelcomeActivity::class.java)
@@ -304,7 +361,7 @@ fun MainView(
                 },
             ) {
                 Image(
-                    painter = painterResource(R.drawable.info),
+                    painter = painterResource(R.drawable.menu_black),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
@@ -312,15 +369,20 @@ fun MainView(
             }
         }
 
-        Spacer(Modifier.height(30.dp))
-
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .size(240.dp)
                 .drawBehind {
                     drawCircle(
-                        color = Color(getColor(getQuality(airQuality, "Krajowy indeks jakości powietrza"))),
+                        color = Color(
+                            getColor(
+                                getQuality(
+                                    airQuality,
+                                    "Krajowy indeks jakości powietrza"
+                                )
+                            )
+                        ),
                         radius = 320f
                     )
                     drawCircle(
@@ -334,11 +396,17 @@ fun MainView(
                     text = "AIR METER",
                     fontSize = 20.sp,
                     fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp).padding(top = 15.dp)
+                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp)
+                        .padding(top = 15.dp)
                 )
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    text = getPercentageAirPurity(getQuality(airQuality, "Krajowy indeks jakości powietrza")),
+                    text = getPercentageAirPurity(
+                        getQuality(
+                            airQuality,
+                            "Krajowy indeks jakości powietrza"
+                        )
+                    ),
                     fontSize = 75.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
@@ -354,6 +422,8 @@ fun MainView(
             }
         }
 
+        Spacer(Modifier.height(20.dp))
+
         Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
             Image(
                 painter = painterResource(R.drawable.arrow),
@@ -361,6 +431,7 @@ fun MainView(
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .size(15.dp, 15.dp)
+                    .align(Alignment.CenterVertically)
             )
             Spacer(Modifier.width(5.dp))
             Text(
@@ -380,7 +451,30 @@ fun MainView(
             IndexField("O₃", getQuality(airQuality, "O3"))
         }
 
-        Spacer(Modifier.weight(1f)) // Dodanie odstępu między głównym widokiem a nawigacją
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(), // Rozciągnij Box na całą szerokość
+            contentAlignment = Alignment.Center // Wyrównaj przycisk na środku
+        ) {
+            Button(
+                onClick = {
+                    // Obsługa kliknięcia przycisku
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF80E4FF), // Kolor tła przycisku
+                    contentColor = Color(0xFF3F3F3F) // Kolor tekstu
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .width(140.dp)  // Szerokość przycisku
+                    .height(38.dp)  // Wysokość przycisku
+            ) {
+                Text(
+                    text = "Zapisz pomiar",
+                    fontSize = 14.sp, // Ustawienie rozmiaru tekstu na 14
+                )
+            }
+        }
 
         NavMenu(selectedIndex.value) { index ->
             selectedIndex.value = index
@@ -388,7 +482,7 @@ fun MainView(
     }
 }
 
-@Composable
+    @Composable
 fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val context = LocalContext.current
@@ -399,7 +493,7 @@ fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(24.dp)) // Przestrzeń nad paskiem menu
+        //Spacer(modifier = Modifier.height(24.dp)) // Przestrzeń nad paskiem menu
 
         Box(
             modifier = Modifier
@@ -446,7 +540,7 @@ fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
             }
         }
 
-        Spacer(modifier = Modifier.height(40.dp)) // Przestrzeń pod paskiem menu
+        Spacer(modifier = Modifier.height(50.dp)) // Przestrzeń pod paskiem menu
     }
 }
 
@@ -463,7 +557,7 @@ fun NavMenuItem(isSelected: Boolean, icon: Int, onClick: () -> Unit) {
         Icon(
             painter = painterResource(icon),
             contentDescription = null,
-            tint = if (isSelected) Color.Black else Color.Black.copy(alpha = 0.6f), // Kolor ikony
+            tint = Color.Black, // Kolor ikony
             modifier = Modifier.size(30.dp) // Rozmiar ikony
         )
     }
