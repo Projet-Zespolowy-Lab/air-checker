@@ -288,26 +288,12 @@ fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
                 color = Color(0xFF3F3F3F)
             )
             Spacer(Modifier.weight(0.8f))
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterVertically)
-                    .size(width = 45.dp, height = 40.dp) // Stały rozmiar obramowania
-                    .border(
-                        width = 2.dp,
-                        color = Color(0xFF80E4FF), // Kolor obramowania
-                        shape = RoundedCornerShape(10.dp) // Zaokrąglone rogi
-                    ),
-                contentAlignment = Alignment.Center // Wyrównanie tekstu w środku
-            ) {
-                Text(
-                    text = indexValue,
-                    fontSize = 20.sp,
-                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                    modifier = Modifier.align(Alignment.Center),
-                    color = Color(0xFF3F3F3F), // Kolor tekstu
-                    textAlign = TextAlign.Center
-                )
-            }
+            Text(
+                text = indexValue, fontSize = 20.sp,
+                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                color = Color(0xFF3F3F3F),
+                textAlign = TextAlign.Right
+            )
         }
     }
 }
@@ -319,17 +305,15 @@ fun MainView(
     airQuality: AirQualityCategories? = AirQualityCategories(listOf())
 ) {
     val context = LocalContext.current
-    val selectedIndex = remember { mutableStateOf(0) } // Zapamiętuje wybraną zakładkę
+    val selectedIndex = remember { mutableStateOf(0) }
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
-        // Przycisk po prawej stronie (oryginalny kod)
+    Box(modifier = Modifier.fillMaxSize()) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
-            horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
+                .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Przycisk po lewej stronie
             TextButton(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = RectangleShape,
@@ -340,15 +324,13 @@ fun MainView(
                 },
             ) {
                 Image(
-                    painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
+                    painter = painterResource(R.drawable.arrow_black),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
+                    modifier = Modifier.fillMaxSize()
                 )
             }
 
-            // Przycisk po prawej stronie
             TextButton(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                 shape = RectangleShape,
@@ -369,111 +351,129 @@ fun MainView(
             }
         }
 
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .size(240.dp)
-                .drawBehind {
-                    drawCircle(
-                        color = Color(
-                            getColor(
-                                getQuality(
-                                    airQuality,
-                                    "Krajowy indeks jakości powietrza"
+                .fillMaxSize()
+                .padding(top = 70.dp, bottom = 70.dp)
+                .align(Alignment.TopCenter),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .size(240.dp)
+                    .drawBehind {
+                        drawCircle(
+                            color = Color(
+                                getColor(
+                                    getQuality(
+                                        airQuality,
+                                        "Krajowy indeks jakości powietrza"
+                                    )
                                 )
+                            ),
+                            radius = 320f
+                        )
+                        drawCircle(
+                            color = Color(0xFFFFE9C9),
+                            radius = 305f
+                        )
+                    }
+            ) {
+                Column(modifier = Modifier.align(Alignment.TopCenter)) {
+                    Text(
+                        text = "AIR METER",
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                        color = Color(0xFF3F3F3F),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .offset(y = 30.dp)
+                            .padding(top = 15.dp)
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = getPercentageAirPurity(
+                            getQuality(
+                                airQuality,
+                                "Krajowy indeks jakości powietrza"
                             )
                         ),
-                        radius = 320f
+                        fontSize = 75.sp,
+                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Thin)),
+                        color = Color(0xFF3F3F3F),
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
-                    drawCircle(
-                        color = Color(0xFFFFE9C9),
-                        radius = 305f
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                        color = Color(0xFF3F3F3F),
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .offset(y = (-30).dp)
                     )
                 }
-        ) {
-            Column(modifier = Modifier.align(Alignment.TopCenter)) {
-                Text(
-                    text = "AIR METER",
-                    fontSize = 20.sp,
-                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp)
-                        .padding(top = 15.dp)
+            }
+
+            Spacer(Modifier.height(10.dp))
+
+            Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                Image(
+                    painter = painterResource(R.drawable.arrow),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(15.dp, 15.dp)
+                        .align(Alignment.CenterVertically)
                 )
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.width(5.dp))
                 Text(
-                    text = getPercentageAirPurity(
-                        getQuality(
-                            airQuality,
-                            "Krajowy indeks jakości powietrza"
-                        )
-                    ),
-                    fontSize = 75.sp,
-                    fontFamily = FontFamily(Font(R.font.prompt)),
-                    fontWeight = FontWeight(250),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    text = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
-                    fontSize = 20.sp,
+                    text = getNameNearestStation(nearestStation) + ", PL",
+                    fontSize = 14.sp,
                     fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = (-30).dp)
+                    color = Color(0xFF3F3F3F),
                 )
             }
-        }
 
-        Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(10.dp))
 
-        Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Image(
-                painter = painterResource(R.drawable.arrow),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
+            Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
+                IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
+                IndexField("PM 10", getQuality(airQuality, "PM10"))
+                IndexField("NO₂", getQuality(airQuality, "NO2"))
+                IndexField("SO₂", getQuality(airQuality, "SO2"))
+                IndexField("O₃", getQuality(airQuality, "O3"))
+            }
+
+
+            Box(
                 modifier = Modifier
-                    .size(15.dp, 15.dp)
-                    .align(Alignment.CenterVertically)
-            )
-            Spacer(Modifier.width(5.dp))
-            Text(
-                text = getNameNearestStation(nearestStation) + ", PL",
-                fontSize = 14.sp,
-                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-            )
-        }
-
-        Spacer(Modifier.height(50.dp))
-
-        Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
-            IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
-            IndexField("PM 10", getQuality(airQuality, "PM10"))
-            IndexField("NO₂", getQuality(airQuality, "NO2"))
-            IndexField("SO₂", getQuality(airQuality, "SO2"))
-            IndexField("O₃", getQuality(airQuality, "O3"))
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(), // Rozciągnij Box na całą szerokość
-            contentAlignment = Alignment.Center // Wyrównaj przycisk na środku
-        ) {
-            Button(
-                onClick = {
-                    // Obsługa kliknięcia przycisku
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF80E4FF), // Kolor tła przycisku
-                    contentColor = Color(0xFF3F3F3F) // Kolor tekstu
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .width(140.dp)  // Szerokość przycisku
-                    .height(38.dp)  // Wysokość przycisku
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "Zapisz pomiar",
-                    fontSize = 14.sp, // Ustawienie rozmiaru tekstu na 14
-                )
+                Button(
+                    onClick = {
+                        // Obsługa kliknięcia przycisku
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF80E4FF),
+                        contentColor = Color(0xFF3F3F3F)
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .width(140.dp)
+                        .height(38.dp)
+                ) {
+                    Text(
+                        text = "Zapisz pomiar",
+                        fontSize = 14.sp,
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.weight(1f)) // Umożliwia rozciągnięcie przestrzeni pozostałej na ekranie
         }
 
         NavMenu(selectedIndex.value) { index ->
@@ -481,6 +481,7 @@ fun MainView(
         }
     }
 }
+
 
     @Composable
 fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {

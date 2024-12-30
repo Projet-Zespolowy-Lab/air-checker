@@ -31,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -97,7 +98,7 @@ fun HistoryView() {
                     .padding(horizontal = 40.dp)
                     .fillMaxWidth()
             ) {
-                ColoredBox(colorFlag = "Bardzo_Dobry", "17.12.2024", "Jana Pawła II, Łódź", "30", "30", "2", "-1")
+                ColoredBox(colorFlag = "Bardzo_Dobry", "17-12-2024 20:23:23", "Jana Pawła II, Łódź", "Bardzo dobry", "Dobry", "Dobry", "Bardzo dobry")
                 ColoredBox(colorFlag = "Dobry", "19.12.2024", "Jana Pawła II, Łódź", "29", "30", "2", "-1")
                 ColoredBox(colorFlag = "Umiarkowany", "01.12.2024", "Jana Pawła II, Łódź", "33", "30", "2", "-1")
                 ColoredBox(colorFlag = "Dostateczny", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
@@ -167,7 +168,7 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp) // Zwiększona wysokość, aby pomieścić dwa rzędy tekstu
+            .height(90.dp) // Zwiększona wysokość, aby pomieścić dwa rzędy tekstu
             .background(Color(0xFF80E4FF), shape = RoundedCornerShape(8.dp))
     ) {
         // Kolumna z tekstem i obrazem
@@ -183,7 +184,7 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .padding(start = 8.dp, top = 4.dp),
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
                     color = Color(0xFF3F3F3F)
@@ -191,9 +192,9 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                 Text(
                     text = place,
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 80.dp, top = 4.dp),
-                    fontSize = 14.sp,
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 30.dp, top = 4.dp),
+                    fontSize = 12.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
                     color = Color(0xFF3F3F3F)
@@ -207,15 +208,22 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                         .size(20.dp) // Rozmiar ikony (możesz dostosować według potrzeb)
                 )
             }
-            Text(
-                text = "PM 2.5 [$valuePM25] PM 10 [$valuePM10] NO 2 [$valueNO2] SO 2 [$valueSO2]",
-                modifier = Modifier
-                    .padding(start = 8.dp),
-                fontSize = 14.sp,
-                fontFamily = FontFamily(Font(R.font.prompt)),
-                fontWeight = FontWeight(250),
-                color = Color(0xFF3F3F3F)
-            )
+            Spacer(modifier = Modifier.height(5.dp))
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "PM 2.5 [$valuePM25] PM 10 [$valuePM10] \nNO 2 [$valueNO2] SO 2 [$valueSO2]",
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt)),
+                    fontWeight = FontWeight(250),
+                    color = Color(0xFF3F3F3F)
+                )
+            }
+
 
             Spacer(modifier = Modifier.weight(1f))
 
