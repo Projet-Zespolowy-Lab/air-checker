@@ -121,3 +121,4 @@ fun initUpdates(viewModel: LocationViewModel, activity: Activity) {
         Looper.getMainLooper()
     )
 }
+

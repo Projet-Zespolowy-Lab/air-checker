@@ -1,5 +1,6 @@
 package com.example.air_checker.view
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
@@ -40,13 +41,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
@@ -67,7 +67,6 @@ import com.example.air_checker.R
 import com.example.air_checker.database.Measure
 import com.example.air_checker.database.MeasureHistory
 import com.example.air_checker.model.AirQualityCategories
-import com.example.air_checker.model.Place
 import com.example.air_checker.model.Station
 import com.example.air_checker.model.places
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
@@ -164,17 +163,7 @@ class MainActivity : ComponentActivity() {
 
         /****Usunąć po implementacji odczytu i zapisu do bazy*********/
         // Dodanie nowego rekordu
-        val measure = Measure(
-            place = "Jana Pawła II, Łódź",
-            qualityIndex = 78.3,
-            qualityCategory = "Dobry",
-            color = "#0011AA",
-            pm10 = "Nieznany",
-            pm25 = "Dobry",
-            no2 = "Dobry",
-            so2 = "Zły",
-            o3 = "Nieznany")
-        insertRecordToDatabase(this, measure)
+
 
         // Odczyt rekordów z bazy danych
         val measureHistory: MeasureHistory = readRecordsFromDatabase(this)
@@ -319,7 +308,9 @@ fun MainView(
     airQuality: AirQualityCategories? = AirQualityCategories(listOf())
 ) {
     val context = LocalContext.current
-    val selectedIndex = remember { mutableStateOf(0) } // Zapamiętuje wybraną zakładkę
+    val activity = context as Activity
+    val intent  = activity.intent
+    val selectedIndex = remember { mutableIntStateOf(0) } // Zapamiętuje wybraną zakładkę
 
     Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
         // Przycisk po prawej stronie (oryginalny kod)
@@ -329,25 +320,27 @@ fun MainView(
                 .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
             horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
         ) {
-            // Przycisk po lewej stronie
-            TextButton(
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                shape = RectangleShape,
-                modifier = Modifier.size(30.dp),
-                contentPadding = PaddingValues(0.dp),
-                onClick = {
-                    // Działanie przy kliknięciu
-                },
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                )
+            if(intent.getStringExtra("wybrane_miasto_nazwa") != null) {
+                // Przycisk po lewej stronie
+                TextButton(
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    shape = RectangleShape,
+                    modifier = Modifier.size(30.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    onClick = {
+                        val newIntent = Intent(context, MainActivity::class.java)
+                        activity.startActivity(newIntent)
+                    },
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                    )
+                }
             }
-
             // Przycisk po prawej stronie
             TextButton(
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -355,9 +348,8 @@ fun MainView(
                 modifier = Modifier.size(30.dp),
                 contentPadding = PaddingValues(0.dp),
                 onClick = {
-                    val intent = Intent(context, WelcomeActivity::class.java)
-                    intent.putExtra("buttonText", "Powrót")
-                    context.startActivity(intent)
+                    val newIntent = Intent(context, HistoryActivity::class.java)
+                    context.startActivity(newIntent)
                 },
             ) {
                 Image(
@@ -458,7 +450,18 @@ fun MainView(
         ) {
             Button(
                 onClick = {
-                    // Obsługa kliknięcia przycisku
+                    // Obsługa kliknięcia przycisku+
+                    val measure = Measure(
+                        place = getNameNearestStation(nearestStation),
+                        qualityIndex = 78.3,
+                        qualityCategory = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
+                        color = getColor(getQuality(airQuality, "Krajowy indeks jakości powietrza")).toString(),
+                        pm10 = getQuality(airQuality, "PM10"),
+                        pm25 = getQuality(airQuality, "PM2.5"),
+                        no2 = getQuality(airQuality, "NO2"),
+                        so2 = getQuality(airQuality, "SO2"),
+                        o3 = getQuality(airQuality, "O3"))
+                    insertRecordToDatabase(context, measure)
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF80E4FF), // Kolor tła przycisku
@@ -476,14 +479,12 @@ fun MainView(
             }
         }
 
-        NavMenu(selectedIndex.value) { index ->
-            selectedIndex.value = index
-        }
+        NavMenu(selectedIndex.intValue)
     }
 }
 
     @Composable
-fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
+fun NavMenu(selectedIndex: Int) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val context = LocalContext.current
 
@@ -526,7 +527,7 @@ fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
                     isSelected = selectedIndex == 1,
                     icon = R.drawable.ic_search,
                     onClick = {
-                        val intent = Intent(context, ScreenActivity::class.java)
+                        val intent = Intent(context, CityFinderActivity::class.java)
                         context.startActivity(intent)
                     }
                 )
@@ -535,7 +536,11 @@ fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
                 NavMenuItem(
                     isSelected = selectedIndex == 2,
                     icon = R.drawable.info,
-                    onClick = { onItemSelected(2) }
+                    onClick = {
+                        val newIntent = Intent(context, WelcomeActivity::class.java)
+                        newIntent.putExtra("buttonText", "Powrót")
+                        context.startActivity(newIntent)
+                    }
                 )
             }
         }

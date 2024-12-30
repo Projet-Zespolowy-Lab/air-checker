@@ -1,6 +1,5 @@
 package com.example.air_checker.view
 
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,22 +7,26 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -35,6 +38,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.air_checker.R
+import com.example.air_checker.database.Measure
+import com.example.air_checker.database.MeasureHistory
+import com.example.air_checker.model.Place
+import com.example.air_checker.viewModel.loadMoreItems
+import readRecordsFromDatabase
 
 class HistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,7 +60,10 @@ fun HistoryView() {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
 
     val context = LocalContext.current
-    val selectedIndex = remember { mutableStateOf(3) }
+    val items = readRecordsFromDatabase(context).history
+    val selectedIndex = remember { mutableIntStateOf(3) }
+    var currentIndex by remember { mutableIntStateOf(0) }
+    val displayedItems = remember { mutableStateListOf<Measure>() }
     Column(
         Modifier
             .statusBarsPadding()
@@ -90,21 +101,26 @@ fun HistoryView() {
                 .fillMaxWidth()
                 .heightIn(max = 550.dp)
         ) {
-            Column(
+            LaunchedEffect(Unit) {
+                loadMoreItems(currentIndex, items, displayedItems)
+                currentIndex += 20
+            }
+
+            LazyColumn(
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 40.dp)
                     .fillMaxWidth()
             ) {
-                ColoredBox(colorFlag = "FF6464", "17.12.2024", "Jana Pawła II, Łódź", "30", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "19.12.2024", "Jana Pawła II, Łódź", "29", "30", "2", "-1")
-                ColoredBox(colorFlag = "FFB464", "01.12.2024", "Jana Pawła II, Łódź", "33", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
+
+                items(displayedItems){ item ->
+                    ColoredBox(item.color!!, item.timestamp!!, item.place!!, item.pm25!!, item.pm10!!, item.no2!!, item.so2!!)
+                    if (currentIndex < items.size) {
+                        LaunchedEffect(Unit) {
+                            loadMoreItems(currentIndex, items, displayedItems)
+                            currentIndex += 20
+                        }
+                    }
+                }
             }
 
             // Dolna maska
@@ -148,9 +164,7 @@ fun HistoryView() {
         }
     }
 
-    NavMenu(selectedIndex.value) { index ->
-        selectedIndex.value = index
-    }
+    NavMenu(selectedIndex.intValue)
 }
 
 @Composable

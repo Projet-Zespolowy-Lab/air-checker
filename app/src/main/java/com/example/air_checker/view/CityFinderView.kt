@@ -43,12 +43,12 @@ import com.example.air_checker.viewModel.filterPlacesByFirstLetter
 import com.example.air_checker.viewModel.loadMoreItems
 import com.example.air_checker.R
 
-class ScreenActivity : ComponentActivity() {
+class CityFinderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            ScreenView()
+            CityFinderView()
         }
     }
 }
@@ -56,7 +56,7 @@ class ScreenActivity : ComponentActivity() {
 
 @Preview(showBackground = true)
 @Composable
-fun ScreenView() {
+fun CityFinderView() {
 
     Column(
         modifier = Modifier
@@ -128,8 +128,6 @@ fun ScreenView() {
                 }
             }
         }
-        NavMenu(selectedIndex.value) { index ->
-            selectedIndex.value = index
-        }
+        NavMenu(selectedIndex.value)
     }
 }
