@@ -173,7 +173,7 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp) // Zwiększona wysokość, aby pomieścić dwa rzędy tekstu
+            .height(90.dp) // Zwiększona wysokość, aby pomieścić dwa rzędy tekstu
             .background(Color(0xFF80E4FF), shape = RoundedCornerShape(8.dp))
     ) {
         // Kolumna z tekstem i obrazem
@@ -189,7 +189,7 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .padding(start = 8.dp, top = 4.dp),
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
                     color = Color(0xFF3F3F3F)
@@ -197,9 +197,9 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                 Text(
                     text = place,
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 80.dp, top = 4.dp),
-                    fontSize = 14.sp,
+                        .align(Alignment.CenterEnd)
+                        .padding(end = 30.dp, top = 4.dp),
+                    fontSize = 12.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
                     color = Color(0xFF3F3F3F)
@@ -213,15 +213,22 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                         .size(20.dp) // Rozmiar ikony (możesz dostosować według potrzeb)
                 )
             }
-            Text(
-                text = "PM 2.5 [$valuePM25] PM 10 [$valuePM10] NO 2 [$valueNO2] SO 2 [$valueSO2]",
-                modifier = Modifier
-                    .padding(start = 8.dp),
-                fontSize = 14.sp,
-                fontFamily = FontFamily(Font(R.font.prompt)),
-                fontWeight = FontWeight(250),
-                color = Color(0xFF3F3F3F)
-            )
+            Spacer(modifier = Modifier.height(5.dp))
+            Box(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "PM 2.5 [$valuePM25] PM 10 [$valuePM10] \nNO 2 [$valueNO2] SO 2 [$valueSO2]",
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                    textAlign = TextAlign.Center,
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt)),
+                    fontWeight = FontWeight(250),
+                    color = Color(0xFF3F3F3F)
+                )
+            }
+
 
             Spacer(modifier = Modifier.weight(1f))
 
