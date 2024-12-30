@@ -35,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.air_checker.R
+import com.example.air_checker.model.IndexColors
 
 class HistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -96,15 +97,13 @@ fun HistoryView() {
                     .padding(horizontal = 40.dp)
                     .fillMaxWidth()
             ) {
-                ColoredBox(colorFlag = "FF6464", "17.12.2024", "Jana Pawła II, Łódź", "30", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "19.12.2024", "Jana Pawła II, Łódź", "29", "30", "2", "-1")
-                ColoredBox(colorFlag = "FFB464", "01.12.2024", "Jana Pawła II, Łódź", "33", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "64FF7E", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
+                ColoredBox(colorFlag = "Bardzo_Dobry", "17.12.2024", "Jana Pawła II, Łódź", "30", "30", "2", "-1")
+                ColoredBox(colorFlag = "Dobry", "19.12.2024", "Jana Pawła II, Łódź", "29", "30", "2", "-1")
+                ColoredBox(colorFlag = "Umiarkowany", "01.12.2024", "Jana Pawła II, Łódź", "33", "30", "2", "-1")
+                ColoredBox(colorFlag = "Dostateczny", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
+                ColoredBox(colorFlag = "Zły", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
+                ColoredBox(colorFlag = "Bardzo_Zły", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
+                ColoredBox(colorFlag = "", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
             }
 
             // Dolna maska
@@ -155,7 +154,16 @@ fun HistoryView() {
 
 @Composable
 fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String, valuePM10: String, valueNO2: String, valueSO2: String) {
-    val flagColor = Color(android.graphics.Color.parseColor("#$colorFlag"))
+    val flagColor = when (colorFlag) {
+        "Bardzo_Dobry" -> Color(IndexColors.Bardzo_Dobry.rgb)
+        "Dobry" -> Color(IndexColors.Dobry.rgb)
+        "Umiarkowany" -> Color(IndexColors.Umiarkowany.rgb)
+        "Dostateczny" -> Color(IndexColors.Dostateczny.rgb)
+        "Zły" -> Color(IndexColors.Zły.rgb)
+        "Bardzo_Zły" -> Color(IndexColors.Bardzo_Zły.rgb)
+        else -> Color(IndexColors.Brak.rgb)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
