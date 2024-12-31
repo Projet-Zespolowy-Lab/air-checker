@@ -1,9 +1,7 @@
 package com.example.air_checker.view
 
-import android.content.Intent
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -16,6 +14,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,14 +24,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -47,6 +46,7 @@ import com.example.air_checker.viewModel.exportToCSV
 import com.example.air_checker.viewModel.getColor
 import com.example.air_checker.viewModel.loadMoreItems
 import deleteFromDatabase
+import kotlinx.coroutines.launch
 import readRecordsFromDatabase
 import java.io.File
 import java.io.FileOutputStream
@@ -63,9 +63,10 @@ class HistoryActivity : ComponentActivity() {
 
 @Composable
 fun HistoryView() {
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-
+//    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+//    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val scope = rememberCoroutineScope()
+    val snackBarHostState = remember { SnackbarHostState()}
     val context = LocalContext.current
     val items = readRecordsFromDatabase(context).history
     val selectedIndex = remember { mutableIntStateOf(3) }
@@ -130,20 +131,20 @@ fun HistoryView() {
                 }
             }
 
-            // Dolna maska
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xFFF5FBFF)),
-                            startY = 0f,
-                            endY = 100f
-                        )
-                    )
-                    .align(Alignment.BottomCenter)
-            )
+//            // Dolna maska
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(60.dp)
+//                    .background(
+//                        Brush.verticalGradient(
+//                            colors = listOf(Color.Transparent, Color(0xFFF5FBFF)),
+//                            startY = 0f,
+//                            endY = 100f
+//                        )
+//                    )
+//                    .align(Alignment.BottomCenter)
+//            )
         }
 
         TextButton(
@@ -151,7 +152,11 @@ fun HistoryView() {
                 val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
                 val file = File(documentsDir, "wyniki_pomiarów.csv")
                 FileOutputStream(file).apply { exportToCSV(readRecordsFromDatabase(context).history) }
-                Log.d("Zapis pliku", "Plik z wynikami został pomyślnie utworzony")
+                if (file.exists()){
+                    scope.launch{
+                        snackBarHostState.showSnackbar("Plik z wynikami został pomyślnie utworzony")
+                    }
+                }
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -175,7 +180,7 @@ fun HistoryView() {
             )
         }
     }
-
+    SnackbarHost(hostState = snackBarHostState)
     NavMenu(selectedIndex.intValue)
 }
 
@@ -226,7 +231,7 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                         .align(Alignment.TopEnd)
                         .padding(top = 4.dp, end = 4.dp)
                         .size(26.dp), // Rozmiar przycisku (możesz dostosować według potrzeb)
-                    contentPadding = PaddingValues(0.dp), // Usuń domyślne paddingi przycisku
+                    contentPadding = PaddingValues(0.dp), // Usuń domyślne padding`i przycisku
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent) // Ustaw przezroczyste tło, jeśli potrzebne
                 ) {
                     Image(
@@ -269,9 +274,9 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
 }
 
 
-
 @Preview(showBackground = true)
 @Composable
 fun HistoryPreview() {
     HistoryView()
 }
+

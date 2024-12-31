@@ -65,7 +65,7 @@ fun getPercentageAirPurity(indexValue: String): String {
     return IndexColors.Brak.value
 }
 
-private val LOCATION_PERMISSION_REQUEST_CODE = 1
+private const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
 fun checkPermissions(context: Context) {
     val activity = context as Activity
@@ -89,9 +89,9 @@ fun hasLocationPermissions(context: Context): Boolean {
 }
 
 fun hasPermission(permission: String, context: Context): Boolean {
-    val result = ActivityCompat.checkSelfPermission(context,permission);
+    val result = ActivityCompat.checkSelfPermission(context,permission)
 
-    return result == PackageManager.PERMISSION_GRANTED;
+    return result == PackageManager.PERMISSION_GRANTED
 }
 
 fun createLocationRequest(): LocationRequest {
@@ -102,7 +102,7 @@ private lateinit var locationClient: FusedLocationProviderClient
 
 @SuppressLint("MissingPermission")
 fun initUpdates(viewModel: LocationViewModel, activity: Activity) {
-    locationClient = LocationServices.getFusedLocationProviderClient(activity);
+    locationClient = LocationServices.getFusedLocationProviderClient(activity)
 
     locationClient.requestLocationUpdates(
         createLocationRequest(),

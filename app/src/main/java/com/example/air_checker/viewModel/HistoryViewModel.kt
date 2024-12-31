@@ -1,8 +1,6 @@
 package com.example.air_checker.viewModel
 
 import com.example.air_checker.database.Measure
-import com.example.air_checker.model.Place
-import java.io.File
 import java.io.OutputStream
 
 

@@ -1,7 +1,6 @@
 package com.example.air_checker.view
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
@@ -169,7 +168,7 @@ class MainActivity : ComponentActivity() {
 
     // Funkcja nasłuchująca stanu połączenia sieciowego
     private fun observeNetworkConnectivity() {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 stationsViewModel.setNetworkError(false)
@@ -183,7 +182,7 @@ class MainActivity : ComponentActivity() {
 
     // Funkcja sprawdzająca dostępność połączenia sieciowego (na żądanie)
     private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)

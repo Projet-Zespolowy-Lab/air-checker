@@ -55,4 +55,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.gson)
     implementation("com.squareup.okhttp3:okhttp:+")
+    implementation("androidx.compose.material:material:1.7.6")
+    implementation("androidx.compose.ui:ui:1.7.6")
 }
