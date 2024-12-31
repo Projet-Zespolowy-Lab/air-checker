@@ -55,5 +55,4 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.gson)
     implementation("com.squareup.okhttp3:okhttp:+")
-
 }

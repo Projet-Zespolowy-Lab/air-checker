@@ -1,6 +1,9 @@
 package com.example.air_checker.view
 
+import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -9,10 +12,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -20,9 +23,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -34,15 +37,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.air_checker.R
 import com.example.air_checker.database.Measure
-import com.example.air_checker.database.MeasureHistory
-import com.example.air_checker.model.Place
+import com.example.air_checker.viewModel.exportToCSV
+import com.example.air_checker.viewModel.getColor
 import com.example.air_checker.viewModel.loadMoreItems
+import deleteFromDatabase
 import readRecordsFromDatabase
+import java.io.File
+import java.io.FileOutputStream
 
 class HistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,7 +120,7 @@ fun HistoryView() {
             ) {
 
                 items(displayedItems){ item ->
-                    ColoredBox(item.color!!, item.timestamp!!, item.place!!, item.pm25!!, item.pm10!!, item.no2!!, item.so2!!)
+                    ColoredBox(item.qualityCategory!!, item.timestamp!!, item.place!!, item.pm25!!, item.pm10!!, item.no2!!, item.so2!!, item.id!!, displayedItems)
                     if (currentIndex < items.size) {
                         LaunchedEffect(Unit) {
                             loadMoreItems(currentIndex, items, displayedItems)
@@ -140,7 +147,12 @@ fun HistoryView() {
         }
 
         TextButton(
-            onClick = {},
+            onClick = {
+                val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                val file = File(documentsDir, "wyniki_pomiarów.csv")
+                FileOutputStream(file).apply { exportToCSV(readRecordsFromDatabase(context).history) }
+                Log.d("Zapis pliku", "Plik z wynikami został pomyślnie utworzony")
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 120.dp)
@@ -168,8 +180,9 @@ fun HistoryView() {
 }
 
 @Composable
-fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String, valuePM10: String, valueNO2: String, valueSO2: String) {
-    val flagColor = Color(android.graphics.Color.parseColor("#$colorFlag"))
+fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String, valuePM10: String, valueNO2: String, valueSO2: String, itemID: Int, displayedItems:  SnapshotStateList<Measure>) {
+    val flagColor = Color(getColor(colorFlag))
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -205,7 +218,10 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                     color = Color(0xFF3F3F3F)
                 )
                 Button(
-                    onClick = { /* Akcja przycisku */ },
+                    onClick = {
+                        deleteFromDatabase(context, id=itemID)
+                        displayedItems.removeIf { it.id == itemID }
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 4.dp, end = 4.dp)

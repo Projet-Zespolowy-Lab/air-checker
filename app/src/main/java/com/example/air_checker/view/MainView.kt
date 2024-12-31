@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.air_checker.R
 import com.example.air_checker.database.Measure
-import com.example.air_checker.database.MeasureHistory
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.Station
 import com.example.air_checker.model.places
@@ -73,18 +72,17 @@ import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
 import com.example.air_checker.viewModel.StationsViewModel
 import com.example.air_checker.viewModel.checkPermissions
+import com.example.air_checker.viewModel.checkStoragePermission
 import com.example.air_checker.viewModel.getColor
 import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.initUpdates
-import deleteFromDatabase
 import fetchAllPlaces
 import insertRecordToDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import readRecordsFromDatabase
 
 
 class MainActivity : ComponentActivity() {
@@ -97,6 +95,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         checkPermissions(this)
+        checkStoragePermission(this)
         val viewModel = LocationViewModel()
 
         //Załadowanie danych miejscowości
@@ -161,35 +160,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        /****Usunąć po implementacji odczytu i zapisu do bazy*********/
-        // Dodanie nowego rekordu
-
-
-        // Odczyt rekordów z bazy danych
-        val measureHistory: MeasureHistory = readRecordsFromDatabase(this)
-
-        //Usuwanie z bazy po ID
-        deleteFromDatabase(this, id=5)
-
-        // Logujemy każdy odczytany rekord
-        measureHistory.history.forEach { measure ->
-            Log.d("baza",
-                 "ID: ${measure.id}, " +
-                "Place: ${measure.place}, " +
-                "Index: ${measure.qualityIndex}, " +
-                "Cat: ${measure.qualityCategory}, " +
-                "Kolor: ${measure.color}, " +
-                "PM10: ${measure.pm10}, " +
-                "PM2.5: ${measure.pm25}, " +
-                "NO2: ${measure.no2}, " +
-                "SO2: ${measure.so2}, " +
-                "O3: ${measure.o3}, " +
-                "Timestamp: ${measure.timestamp}")
-        }
-
-        /***********Koniec usunąć************************************/
-
-
         setContent {
             NearestStation(stationsViewModel = stationsViewModel,
                 airQualityIndexViewModel = airQualityIndexViewModel, ::isNetworkAvailable)
@@ -229,7 +199,7 @@ fun NearestStation(stationsViewModel: StationsViewModel,
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
     val networkError by stationsViewModel.networkError.observeAsState(false)
 
-    Column() {
+    Column {
         when {
             networkError -> {
                 // Komunikat o braku internetu
@@ -242,7 +212,7 @@ fun NearestStation(stationsViewModel: StationsViewModel,
             MainView(nearestStation, airQualityCategories)
         }
         else{
-            MainView(Station(0, "",0.0,0.0),)
+            MainView(Station(0, "", 0.0, 0.0))
         }
     }
 }
@@ -314,50 +284,79 @@ fun MainView(
 
     Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
         // Przycisk po prawej stronie (oryginalny kod)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
-            horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
-        ) {
-            if(intent.getStringExtra("wybrane_miasto_nazwa") != null) {
-                // Przycisk po lewej stronie
+        if(intent.getStringExtra("wybrane_miasto_nazwa") != null) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
+                horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
+            ) {
+                    // Przycisk po lewej stronie
+                    TextButton(
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        shape = RectangleShape,
+                        modifier = Modifier.size(30.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        onClick = {
+                            val newIntent = Intent(context, MainActivity::class.java)
+                            activity.startActivity(newIntent)
+                        },
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                        )
+                    }
+                // Przycisk po prawej stronie
                 TextButton(
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                     shape = RectangleShape,
                     modifier = Modifier.size(30.dp),
                     contentPadding = PaddingValues(0.dp),
                     onClick = {
-                        val newIntent = Intent(context, MainActivity::class.java)
-                        activity.startActivity(newIntent)
+                        val newIntent = Intent(context, HistoryActivity::class.java)
+                        context.startActivity(newIntent)
                     },
                 ) {
                     Image(
-                        painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
+                        painter = painterResource(R.drawable.menu_black),
                         contentDescription = null,
                         contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
+                        modifier = Modifier.fillMaxSize()
                     )
                 }
             }
-            // Przycisk po prawej stronie
-            TextButton(
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                shape = RectangleShape,
-                modifier = Modifier.size(30.dp),
-                contentPadding = PaddingValues(0.dp),
-                onClick = {
-                    val newIntent = Intent(context, HistoryActivity::class.java)
-                    context.startActivity(newIntent)
-                },
+        }
+        else
+        {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
+                horizontalArrangement = Arrangement.End // Umieszcza przycisk na końcu strony
             ) {
-                Image(
-                    painter = painterResource(R.drawable.menu_black),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
+
+                // Przycisk po prawej stronie
+                TextButton(
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    shape = RectangleShape,
+                    modifier = Modifier.size(30.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    onClick = {
+                        val newIntent = Intent(context, HistoryActivity::class.java)
+                        context.startActivity(newIntent)
+                    },
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.menu_black),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
 
@@ -460,7 +459,8 @@ fun MainView(
                         pm25 = getQuality(airQuality, "PM2.5"),
                         no2 = getQuality(airQuality, "NO2"),
                         so2 = getQuality(airQuality, "SO2"),
-                        o3 = getQuality(airQuality, "O3"))
+                        o3 = getQuality(airQuality, "O3"),
+                    )
                     insertRecordToDatabase(context, measure)
                 },
                 colors = ButtonDefaults.buttonColors(
