@@ -204,16 +204,24 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                     fontWeight = FontWeight(250),
                     color = Color(0xFF3F3F3F)
                 )
-                Image(
-                    painter = painterResource(R.drawable.button_close),
-                    contentDescription = null,
+                Button(
+                    onClick = { /* Akcja przycisku */ },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(top = 6.dp, end = 8.dp)
-                        .size(20.dp) // Rozmiar ikony (możesz dostosować według potrzeb)
-                )
+                        .padding(top = 4.dp, end = 4.dp)
+                        .size(26.dp), // Rozmiar przycisku (możesz dostosować według potrzeb)
+                    contentPadding = PaddingValues(0.dp), // Usuń domyślne paddingi przycisku
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent) // Ustaw przezroczyste tło, jeśli potrzebne
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.button_close),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp) // Rozmiar ikony (możesz dostosować według potrzeb)
+                    )
+                }
+
             }
-            Spacer(modifier = Modifier.height(5.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             Box(
                 modifier = Modifier.fillMaxWidth()
             ) {
