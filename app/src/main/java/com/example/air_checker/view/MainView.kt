@@ -1,6 +1,6 @@
 package com.example.air_checker.view
 
-import android.content.Context
+import android.app.Activity
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
@@ -40,13 +40,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
@@ -65,27 +64,24 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.air_checker.R
 import com.example.air_checker.database.Measure
-import com.example.air_checker.database.MeasureHistory
 import com.example.air_checker.model.AirQualityCategories
-import com.example.air_checker.model.Place
 import com.example.air_checker.model.Station
 import com.example.air_checker.model.places
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
 import com.example.air_checker.viewModel.StationsViewModel
 import com.example.air_checker.viewModel.checkPermissions
+import com.example.air_checker.viewModel.checkStoragePermission
 import com.example.air_checker.viewModel.getColor
 import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.initUpdates
-import deleteFromDatabase
 import fetchAllPlaces
 import insertRecordToDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import readRecordsFromDatabase
 
 
 class MainActivity : ComponentActivity() {
@@ -98,6 +94,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         checkPermissions(this)
+        checkStoragePermission(this)
         val viewModel = LocationViewModel()
 
         //Załadowanie danych miejscowości
@@ -162,45 +159,6 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        /****Usunąć po implementacji odczytu i zapisu do bazy*********/
-        // Dodanie nowego rekordu
-        val measure = Measure(
-            place = "Jana Pawła II, Łódź",
-            qualityIndex = 78.3,
-            qualityCategory = "Dobry",
-            color = "#0011AA",
-            pm10 = "Nieznany",
-            pm25 = "Dobry",
-            no2 = "Dobry",
-            so2 = "Zły",
-            o3 = "Nieznany")
-        insertRecordToDatabase(this, measure)
-
-        // Odczyt rekordów z bazy danych
-        val measureHistory: MeasureHistory = readRecordsFromDatabase(this)
-
-        //Usuwanie z bazy po ID
-        deleteFromDatabase(this, id=5)
-
-        // Logujemy każdy odczytany rekord
-        measureHistory.history.forEach { measure ->
-            Log.d("baza",
-                 "ID: ${measure.id}, " +
-                "Place: ${measure.place}, " +
-                "Index: ${measure.qualityIndex}, " +
-                "Cat: ${measure.qualityCategory}, " +
-                "Kolor: ${measure.color}, " +
-                "PM10: ${measure.pm10}, " +
-                "PM2.5: ${measure.pm25}, " +
-                "NO2: ${measure.no2}, " +
-                "SO2: ${measure.so2}, " +
-                "O3: ${measure.o3}, " +
-                "Timestamp: ${measure.timestamp}")
-        }
-
-        /***********Koniec usunąć************************************/
-
-
         setContent {
             NearestStation(stationsViewModel = stationsViewModel,
                 airQualityIndexViewModel = airQualityIndexViewModel, ::isNetworkAvailable)
@@ -210,7 +168,7 @@ class MainActivity : ComponentActivity() {
 
     // Funkcja nasłuchująca stanu połączenia sieciowego
     private fun observeNetworkConnectivity() {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
             override fun onAvailable(network: Network) {
                 stationsViewModel.setNetworkError(false)
@@ -224,7 +182,7 @@ class MainActivity : ComponentActivity() {
 
     // Funkcja sprawdzająca dostępność połączenia sieciowego (na żądanie)
     private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -240,7 +198,7 @@ fun NearestStation(stationsViewModel: StationsViewModel,
     val nearestStation by stationsViewModel.nearestStation.observeAsState()
     val networkError by stationsViewModel.networkError.observeAsState(false)
 
-    Column() {
+    Column {
         when {
             networkError -> {
                 // Komunikat o braku internetu
@@ -253,7 +211,7 @@ fun NearestStation(stationsViewModel: StationsViewModel,
             MainView(nearestStation, airQualityCategories)
         }
         else{
-            MainView(Station(0, "",0.0,0.0),)
+            MainView(Station(0, "", 0.0, 0.0))
         }
     }
 }
@@ -288,12 +246,26 @@ fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
                 color = Color(0xFF3F3F3F)
             )
             Spacer(Modifier.weight(0.8f))
-            Text(
-                text = indexValue, fontSize = 20.sp,
-                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                color = Color(0xFF3F3F3F),
-                textAlign = TextAlign.Right
-            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterVertically)
+                    .size(width = 45.dp, height = 40.dp) // Stały rozmiar obramowania
+                    .border(
+                        width = 2.dp,
+                        color = Color(0xFF80E4FF), // Kolor obramowania
+                        shape = RoundedCornerShape(10.dp) // Zaokrąglone rogi
+                    ),
+                contentAlignment = Alignment.Center // Wyrównanie tekstu w środku
+            ) {
+                Text(
+                    text = indexValue,
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFF3F3F3F), // Kolor tekstu
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
@@ -305,186 +277,213 @@ fun MainView(
     airQuality: AirQualityCategories? = AirQualityCategories(listOf())
 ) {
     val context = LocalContext.current
-    val selectedIndex = remember { mutableStateOf(0) }
+    val activity = context as Activity
+    val intent  = activity.intent
+    val selectedIndex = remember { mutableIntStateOf(0) } // Zapamiętuje wybraną zakładkę
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            TextButton(
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                shape = RectangleShape,
-                modifier = Modifier.size(30.dp),
-                contentPadding = PaddingValues(0.dp),
-                onClick = {
-                    // Działanie przy kliknięciu
-                },
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.arrow_black),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            TextButton(
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                shape = RectangleShape,
-                modifier = Modifier.size(30.dp),
-                contentPadding = PaddingValues(0.dp),
-                onClick = {
-                    val intent = Intent(context, WelcomeActivity::class.java)
-                    intent.putExtra("buttonText", "Powrót")
-                    context.startActivity(intent)
-                },
-            ) {
-                Image(
-                    painter = painterResource(R.drawable.menu_black),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = 70.dp, bottom = 70.dp)
-                .align(Alignment.TopCenter),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(
+    Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
+        // Przycisk po prawej stronie (oryginalny kod)
+        if(intent.getStringExtra("wybrane_miasto_nazwa") != null) {
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(240.dp)
-                    .drawBehind {
-                        drawCircle(
-                            color = Color(
-                                getColor(
-                                    getQuality(
-                                        airQuality,
-                                        "Krajowy indeks jakości powietrza"
-                                    )
-                                )
-                            ),
-                            radius = 320f
-                        )
-                        drawCircle(
-                            color = Color(0xFFFFE9C9),
-                            radius = 305f
+                    .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
+                horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
+            ) {
+                    // Przycisk po lewej stronie
+                    TextButton(
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        shape = RectangleShape,
+                        modifier = Modifier.size(30.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        onClick = {
+                            val newIntent = Intent(context, MainActivity::class.java)
+                            activity.startActivity(newIntent)
+                        },
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
                         )
                     }
-            ) {
-                Column(modifier = Modifier.align(Alignment.TopCenter)) {
-                    Text(
-                        text = "AIR METER",
-                        fontSize = 20.sp,
-                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                        color = Color(0xFF3F3F3F),
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .offset(y = 30.dp)
-                            .padding(top = 15.dp)
+                // Przycisk po prawej stronie
+                TextButton(
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    shape = RectangleShape,
+                    modifier = Modifier.size(30.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    onClick = {
+                        val newIntent = Intent(context, HistoryActivity::class.java)
+                        context.startActivity(newIntent)
+                    },
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.menu_black),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        text = getPercentageAirPurity(
-                            getQuality(
-                                airQuality,
-                                "Krajowy indeks jakości powietrza"
+                }
+            }
+        }
+        else
+        {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
+                horizontalArrangement = Arrangement.End // Umieszcza przycisk na końcu strony
+            ) {
+
+                // Przycisk po prawej stronie
+                TextButton(
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                    shape = RectangleShape,
+                    modifier = Modifier.size(30.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    onClick = {
+                        val newIntent = Intent(context, HistoryActivity::class.java)
+                        context.startActivity(newIntent)
+                    },
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.menu_black),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .size(240.dp)
+                .drawBehind {
+                    drawCircle(
+                        color = Color(
+                            getColor(
+                                getQuality(
+                                    airQuality,
+                                    "Krajowy indeks jakości powietrza"
+                                )
                             )
                         ),
-                        fontSize = 75.sp,
-                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Thin)),
-                        color = Color(0xFF3F3F3F),
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                        radius = 320f
                     )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        text = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
-                        fontSize = 20.sp,
-                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                        color = Color(0xFF3F3F3F),
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .offset(y = (-30).dp)
+                    drawCircle(
+                        color = Color(0xFFFFE9C9),
+                        radius = 305f
                     )
                 }
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                Image(
-                    painter = painterResource(R.drawable.arrow),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(15.dp, 15.dp)
-                        .align(Alignment.CenterVertically)
-                )
-                Spacer(Modifier.width(5.dp))
+        ) {
+            Column(modifier = Modifier.align(Alignment.TopCenter)) {
                 Text(
-                    text = getNameNearestStation(nearestStation) + ", PL",
-                    fontSize = 14.sp,
+                    text = "AIR METER",
+                    fontSize = 20.sp,
                     fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                    color = Color(0xFF3F3F3F),
+                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp)
+                        .padding(top = 15.dp)
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = getPercentageAirPurity(
+                        getQuality(
+                            airQuality,
+                            "Krajowy indeks jakości powietrza"
+                        )
+                    ),
+                    fontSize = 75.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt)),
+                    fontWeight = FontWeight(250),
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    text = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = (-30).dp)
                 )
             }
+        }
 
-            Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(20.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
-                IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
-                IndexField("PM 10", getQuality(airQuality, "PM10"))
-                IndexField("NO₂", getQuality(airQuality, "NO2"))
-                IndexField("SO₂", getQuality(airQuality, "SO2"))
-                IndexField("O₃", getQuality(airQuality, "O3"))
-            }
-
-
-            Box(
+        Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+            Image(
+                painter = painterResource(R.drawable.arrow),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                Button(
-                    onClick = {
-                        // Obsługa kliknięcia przycisku
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF80E4FF),
-                        contentColor = Color(0xFF3F3F3F)
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .width(140.dp)
-                        .height(38.dp)
-                ) {
-                    Text(
-                        text = "Zapisz pomiar",
-                        fontSize = 14.sp,
+                    .size(15.dp, 15.dp)
+                    .align(Alignment.CenterVertically)
+            )
+            Spacer(Modifier.width(5.dp))
+            Text(
+                text = getNameNearestStation(nearestStation) + ", PL",
+                fontSize = 14.sp,
+                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+            )
+        }
+
+        Spacer(Modifier.height(50.dp))
+
+        Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
+            IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
+            IndexField("PM 10", getQuality(airQuality, "PM10"))
+            IndexField("NO₂", getQuality(airQuality, "NO2"))
+            IndexField("SO₂", getQuality(airQuality, "SO2"))
+            IndexField("O₃", getQuality(airQuality, "O3"))
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(), // Rozciągnij Box na całą szerokość
+            contentAlignment = Alignment.Center // Wyrównaj przycisk na środku
+        ) {
+            Button(
+                onClick = {
+                    // Obsługa kliknięcia przycisku+
+                    val measure = Measure(
+                        place = getNameNearestStation(nearestStation),
+                        qualityIndex = 78.3,
+                        qualityCategory = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
+                        color = getColor(getQuality(airQuality, "Krajowy indeks jakości powietrza")).toString(),
+                        pm10 = getQuality(airQuality, "PM10"),
+                        pm25 = getQuality(airQuality, "PM2.5"),
+                        no2 = getQuality(airQuality, "NO2"),
+                        so2 = getQuality(airQuality, "SO2"),
+                        o3 = getQuality(airQuality, "O3"),
                     )
-                }
+                    insertRecordToDatabase(context, measure)
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF80E4FF), // Kolor tła przycisku
+                    contentColor = Color(0xFF3F3F3F) // Kolor tekstu
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .width(140.dp)  // Szerokość przycisku
+                    .height(38.dp)  // Wysokość przycisku
+            ) {
+                Text(
+                    text = "Zapisz pomiar",
+                    fontSize = 14.sp, // Ustawienie rozmiaru tekstu na 14
+                )
             }
-
-            Spacer(modifier = Modifier.weight(1f)) // Umożliwia rozciągnięcie przestrzeni pozostałej na ekranie
         }
 
-        NavMenu(selectedIndex.value) { index ->
-            selectedIndex.value = index
-        }
+        NavMenu(selectedIndex.intValue)
     }
 }
 
-
     @Composable
-fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
+fun NavMenu(selectedIndex: Int) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val context = LocalContext.current
 
@@ -527,7 +526,7 @@ fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
                     isSelected = selectedIndex == 1,
                     icon = R.drawable.ic_search,
                     onClick = {
-                        val intent = Intent(context, ScreenActivity::class.java)
+                        val intent = Intent(context, CityFinderActivity::class.java)
                         context.startActivity(intent)
                     }
                 )
@@ -536,7 +535,11 @@ fun NavMenu(selectedIndex: Int, onItemSelected: (Int) -> Unit) {
                 NavMenuItem(
                     isSelected = selectedIndex == 2,
                     icon = R.drawable.info,
-                    onClick = { onItemSelected(2) }
+                    onClick = {
+                        val newIntent = Intent(context, WelcomeActivity::class.java)
+                        newIntent.putExtra("buttonText", "Powrót")
+                        context.startActivity(newIntent)
+                    }
                 )
             }
         }

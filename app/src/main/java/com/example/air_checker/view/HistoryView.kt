@@ -1,32 +1,36 @@
 package com.example.air_checker.view
 
-import android.content.Intent
 import android.os.Bundle
+import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -37,7 +41,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.air_checker.R
-import com.example.air_checker.model.IndexColors
+import com.example.air_checker.database.Measure
+import com.example.air_checker.viewModel.exportToCSV
+import com.example.air_checker.viewModel.getColor
+import com.example.air_checker.viewModel.loadMoreItems
+import deleteFromDatabase
+import kotlinx.coroutines.launch
+import readRecordsFromDatabase
+import java.io.File
+import java.io.FileOutputStream
 
 class HistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,11 +63,15 @@ class HistoryActivity : ComponentActivity() {
 
 @Composable
 fun HistoryView() {
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-
+//    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
+//    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val scope = rememberCoroutineScope()
+    val snackBarHostState = remember { SnackbarHostState()}
     val context = LocalContext.current
-    val selectedIndex = remember { mutableStateOf(3) }
+    val items = readRecordsFromDatabase(context).history
+    val selectedIndex = remember { mutableIntStateOf(3) }
+    var currentIndex by remember { mutableIntStateOf(0) }
+    val displayedItems = remember { mutableStateListOf<Measure>() }
     Column(
         Modifier
             .statusBarsPadding()
@@ -93,39 +109,55 @@ fun HistoryView() {
                 .fillMaxWidth()
                 .heightIn(max = 550.dp)
         ) {
-            Column(
+            LaunchedEffect(Unit) {
+                loadMoreItems(currentIndex, items, displayedItems)
+                currentIndex += 20
+            }
+
+            LazyColumn(
                 modifier = Modifier
-                    .verticalScroll(rememberScrollState())
                     .padding(horizontal = 40.dp)
                     .fillMaxWidth()
             ) {
-                ColoredBox(colorFlag = "Bardzo_Dobry", "17-12-2024 20:23:23", "Jana Pawła II, Łódź", "Bardzo dobry", "Dobry", "Dobry", "Bardzo dobry")
-                ColoredBox(colorFlag = "Dobry", "19.12.2024", "Jana Pawła II, Łódź", "29", "30", "2", "-1")
-                ColoredBox(colorFlag = "Umiarkowany", "01.12.2024", "Jana Pawła II, Łódź", "33", "30", "2", "-1")
-                ColoredBox(colorFlag = "Dostateczny", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "Zły", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "Bardzo_Zły", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
-                ColoredBox(colorFlag = "", "05.12.2024", "Jana Pawła II, Łódź", "25", "30", "2", "-1")
+
+                items(displayedItems){ item ->
+                    ColoredBox(item.qualityCategory!!, item.timestamp!!, item.place!!, item.pm25!!, item.pm10!!, item.no2!!, item.so2!!, item.id!!, displayedItems)
+                    if (currentIndex < items.size) {
+                        LaunchedEffect(Unit) {
+                            loadMoreItems(currentIndex, items, displayedItems)
+                            currentIndex += 20
+                        }
+                    }
+                }
             }
 
-            // Dolna maska
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color(0xFFF5FBFF)),
-                            startY = 0f,
-                            endY = 100f
-                        )
-                    )
-                    .align(Alignment.BottomCenter)
-            )
+//            // Dolna maska
+//            Box(
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(60.dp)
+//                    .background(
+//                        Brush.verticalGradient(
+//                            colors = listOf(Color.Transparent, Color(0xFFF5FBFF)),
+//                            startY = 0f,
+//                            endY = 100f
+//                        )
+//                    )
+//                    .align(Alignment.BottomCenter)
+//            )
         }
 
         TextButton(
-            onClick = {},
+            onClick = {
+                val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                val file = File(documentsDir, "wyniki_pomiarów.csv")
+                FileOutputStream(file).apply { exportToCSV(readRecordsFromDatabase(context).history) }
+                if (file.exists()){
+                    scope.launch{
+                        snackBarHostState.showSnackbar("Plik z wynikami został pomyślnie utworzony")
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 120.dp)
@@ -148,24 +180,14 @@ fun HistoryView() {
             )
         }
     }
-
-    NavMenu(selectedIndex.value) { index ->
-        selectedIndex.value = index
-    }
+    SnackbarHost(hostState = snackBarHostState)
+    NavMenu(selectedIndex.intValue)
 }
 
 @Composable
-fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String, valuePM10: String, valueNO2: String, valueSO2: String) {
-    val flagColor = when (colorFlag) {
-        "Bardzo_Dobry" -> Color(IndexColors.Bardzo_Dobry.rgb)
-        "Dobry" -> Color(IndexColors.Dobry.rgb)
-        "Umiarkowany" -> Color(IndexColors.Umiarkowany.rgb)
-        "Dostateczny" -> Color(IndexColors.Dostateczny.rgb)
-        "Zły" -> Color(IndexColors.Zły.rgb)
-        "Bardzo_Zły" -> Color(IndexColors.Bardzo_Zły.rgb)
-        else -> Color(IndexColors.Brak.rgb)
-    }
-
+fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String, valuePM10: String, valueNO2: String, valueSO2: String, itemID: Int, displayedItems:  SnapshotStateList<Measure>) {
+    val flagColor = Color(getColor(colorFlag))
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -201,12 +223,15 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                     color = Color(0xFF3F3F3F)
                 )
                 Button(
-                    onClick = { /* Akcja przycisku */ },
+                    onClick = {
+                        deleteFromDatabase(context, id=itemID)
+                        displayedItems.removeIf { it.id == itemID }
+                    },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 4.dp, end = 4.dp)
                         .size(26.dp), // Rozmiar przycisku (możesz dostosować według potrzeb)
-                    contentPadding = PaddingValues(0.dp), // Usuń domyślne paddingi przycisku
+                    contentPadding = PaddingValues(0.dp), // Usuń domyślne padding`i przycisku
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent) // Ustaw przezroczyste tło, jeśli potrzebne
                 ) {
                     Image(
@@ -249,9 +274,9 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
 }
 
 
-
 @Preview(showBackground = true)
 @Composable
 fun HistoryPreview() {
     HistoryView()
 }
+

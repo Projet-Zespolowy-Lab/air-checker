@@ -4,27 +4,16 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Looper
-import android.util.Log
-import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.core.content.ContextCompat
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.IndexColors
 import com.example.air_checker.model.Station
-import com.example.air_checker.view.MainActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 
 fun getNameNearestStation(nearestStation: Station?): String {
@@ -76,7 +65,7 @@ fun getPercentageAirPurity(indexValue: String): String {
     return IndexColors.Brak.value
 }
 
-private val LOCATION_PERMISSION_REQUEST_CODE = 1
+private const val LOCATION_PERMISSION_REQUEST_CODE = 1
 
 fun checkPermissions(context: Context) {
     val activity = context as Activity
@@ -100,9 +89,9 @@ fun hasLocationPermissions(context: Context): Boolean {
 }
 
 fun hasPermission(permission: String, context: Context): Boolean {
-    val result = ActivityCompat.checkSelfPermission(context,permission);
+    val result = ActivityCompat.checkSelfPermission(context,permission)
 
-    return result == PackageManager.PERMISSION_GRANTED;
+    return result == PackageManager.PERMISSION_GRANTED
 }
 
 fun createLocationRequest(): LocationRequest {
@@ -113,11 +102,19 @@ private lateinit var locationClient: FusedLocationProviderClient
 
 @SuppressLint("MissingPermission")
 fun initUpdates(viewModel: LocationViewModel, activity: Activity) {
-    locationClient = LocationServices.getFusedLocationProviderClient(activity);
+    locationClient = LocationServices.getFusedLocationProviderClient(activity)
 
     locationClient.requestLocationUpdates(
         createLocationRequest(),
         {location -> viewModel.update(location.latitude, location.longitude)},
         Looper.getMainLooper()
     )
+}
+
+fun checkStoragePermission(context: Context){
+    val activity = context as Activity
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+        ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
+    }
+
 }
