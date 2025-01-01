@@ -5,11 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.core.VectorConverter
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,10 +22,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -32,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.toIntSize
 import com.example.air_checker.R
 
 class WelcomeActivity: ComponentActivity() {
@@ -51,26 +61,28 @@ class WelcomeActivity: ComponentActivity() {
 fun WelcomeView(textButton: String){
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    Column(Modifier.statusBarsPadding().navigationBarsPadding().fillMaxSize()) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxWidth().padding(top = screenHeight * 0.1f)
-        ){
-            Image(
-                painter = painterResource(R.drawable.logo), // TODO Resource do logo
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.size(187.dp), // Wielkość ikony
-            )
-        }
+    val image = ImageBitmap.imageResource(id = R.drawable.background)
+    Column(Modifier.statusBarsPadding().navigationBarsPadding().fillMaxSize().drawBehind { drawIntoCanvas { canvas -> drawImage(image, dstSize = size.toIntSize()) } }) {
+//        Box(
+//            contentAlignment = Alignment.Center,
+//            modifier = Modifier.fillMaxWidth().padding(top = screenHeight * 0.1f)
+//        ){
+//            Image(
+//                painter = painterResource(R.drawable.logo), // TODO Resource do logo
+//                contentDescription = null,
+//                contentScale = ContentScale.Crop,
+//                modifier = Modifier.size(187.dp), // Wielkość ikony
+//            )
+//        }
+        Spacer(Modifier.height(180.dp))
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = "Aplikacja pozwala zorientować ci się, jakiej jakości powietrze znajduje się wokół ciebie.\n")
-            Text(text = "Prezentuje Krajowy Indeks Jakości Powietrza oraz informacje o kluczowych wskaźnikach jakości powietrza:\n")
-            Text(text = "• PM 2.5 – drobne pyły zawieszone (średnica < 2,5 μm)")
-            Text(text = "• PM 10 – większe pyły zawieszone (średnica < 10 μm)")
-            Text(text = "• NO₂ (dwutlenek azotu)")
-            Text(text = "• SO₂ (dwutlenek siarki)")
-            Text(text = "• O₃ (ozon)")
+            Text(text = "Aplikacja pozwala zorientować ci się, jakiej jakości powietrze znajduje się wokół ciebie.\n", color = Color.White)
+            Text(text = "Prezentuje Krajowy Indeks Jakości Powietrza oraz informacje o kluczowych wskaźnikach jakości powietrza:\n", color = Color.White)
+            Text(text = "• PM 2.5 – drobne pyły zawieszone (średnica < 2,5 μm)", color = Color.White)
+            Text(text = "• PM 10 – większe pyły zawieszone (średnica < 10 μm)", color = Color.White)
+            Text(text = "• NO₂ (dwutlenek azotu)", color = Color.White)
+            Text(text = "• SO₂ (dwutlenek siarki)", color = Color.White)
+            Text(text = "• O₃ (ozon)", color = Color.White)
         }
         val context = LocalContext.current
         FloatingActionButton(
@@ -80,7 +92,7 @@ fun WelcomeView(textButton: String){
                 val intent = Intent(context, MainActivity::class.java)
                 context.startActivity(intent)
             },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = screenWidth * 0.15f).padding(bottom = 15.dp).padding(top = screenHeight * 0.2f)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = screenWidth * 0.15f).padding(bottom = 15.dp).padding(top = screenHeight * 0.42f)
         ){
             Text(
                 fontSize = 26.sp,

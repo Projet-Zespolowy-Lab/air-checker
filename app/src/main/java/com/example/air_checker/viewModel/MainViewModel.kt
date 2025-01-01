@@ -6,14 +6,21 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Looper
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.res.imageResource
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.example.air_checker.R
 import com.example.air_checker.model.AirQualityCategories
 import com.example.air_checker.model.IndexColors
 import com.example.air_checker.model.Station
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 
 fun getNameNearestStation(nearestStation: Station?): String {
@@ -117,4 +124,17 @@ fun checkStoragePermission(context: Context){
         ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 1)
     }
 
+}
+@Composable
+fun getImageBitmap(): ImageBitmap {
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val time = LocalDateTime.now().format(formatter)
+    if(LocalTime.parse(time, formatter) > LocalTime.parse("19:00", formatter))
+        return ImageBitmap.imageResource(id =R.drawable.background_night)
+    return ImageBitmap.imageResource(id =R.drawable.background_day)
+}
+fun checkIfIsNight(): Boolean {
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    val time = LocalDateTime.now().format(formatter)
+    return LocalTime.parse(time, formatter) > LocalTime.parse("19:00", formatter)
 }
