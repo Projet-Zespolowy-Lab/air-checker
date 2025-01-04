@@ -92,7 +92,7 @@ fun WelcomeView(textButton: String){
                 val intent = Intent(context, MainActivity::class.java)
                 context.startActivity(intent)
             },
-            modifier = Modifier.fillMaxWidth().padding(horizontal = screenWidth * 0.15f).padding(bottom = 15.dp).padding(top = screenHeight * 0.42f)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = screenWidth * 0.15f).padding(top = screenHeight * 0.3f)
         ){
             Text(
                 fontSize = 26.sp,
