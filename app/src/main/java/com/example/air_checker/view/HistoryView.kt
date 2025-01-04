@@ -154,7 +154,7 @@ fun HistoryView() {
                 FileOutputStream(file).apply { exportToCSV(readRecordsFromDatabase(context).history) }
                 if (file.exists()){
                     scope.launch{
-                        snackBarHostState.showSnackbar("Plik z wynikami został pomyślnie utworzony")
+                        snackBarHostState.showSnackbar("Plik z wynikami został pomyślnie utworzony w folderze Dokumenty")
                     }
                 }
             },
