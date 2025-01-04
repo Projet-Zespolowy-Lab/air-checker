@@ -26,6 +26,14 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 
 <br>
 
+## Sobota 4 stycznia 13:00
+- Eksport historii pomiarów do pliku
+
+
+## Sobota 28 grudnia 13:00
+- Historia pomiarów - UI, baza i backend
+- Wszystkie miejscowości są w bazie, łącznie z wsiami, ponad 40k miejsc
+
 ## Sobota 21 grudnia 13:00
 - Zrelesowanie wersji 1.4.2
 - Rozplanowanie zadań odn. do zapisu historii pomiarów...
