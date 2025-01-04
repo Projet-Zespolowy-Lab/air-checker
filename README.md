@@ -35,7 +35,7 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 - Wszystkie miejscowości są w bazie, łącznie z wsiami, ponad 40k miejsc
 
 ## Sobota 21 grudnia 13:00
-- Zrelesowanie wersji 1.4.2
+- Zreleasowanie wersji 1.4.2
 - Rozplanowanie zadań odn. do zapisu historii pomiarów...
 - ... i eksportu historii
 
