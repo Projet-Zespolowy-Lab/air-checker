@@ -35,9 +35,9 @@ fun readRecordsFromDatabase(context: Context): MeasureHistory {
   val dbPath = context.getDatabasePath(dbName).absolutePath
   val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
-  val cursor = db.rawQuery("SELECT ID, place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3, timestamp FROM MeasureHistory", null)
+  val cursor = db.rawQuery("SELECT ID, place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3, timestamp FROM MeasureHistory ORDER BY timestamp DESC", null)
   val measures = mutableListOf<Measure>()
-
+ł
   // Iteracja przez rekordy
   while (cursor.moveToNext()) {
     val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
