@@ -5,7 +5,7 @@ import java.io.OutputStream
 
 
 fun loadMoreItems(startIndex: Int, allItems: List<Measure>, displayedItems: MutableList<Measure>) {
-    val endIndex = minOf(startIndex + 20, allItems.size)
+    val endIndex = minOf(startIndex + 6, allItems.size)
     displayedItems.addAll(allItems.subList(startIndex, endIndex))
 }
 
