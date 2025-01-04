@@ -16,15 +16,47 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 ## Pozostałe
 - GitHub
 - Figma
-- Google Apis
+- ~~Google geolocation API~~
 - API Głównego Inspektoratu Ochrony Środowiska (https://powietrze.gios.gov.pl/pjp/content/api)
-- Replit
+- ~~Replit~~ - używany do mockowania testów
 - Miro
-  
+- Python do obróbki danych miejscowości
+- [Dane miejscowości](https://github.com/jjbartek/polskie-miejscowosci?tab=CC0-1.0-1-ov-file)
 
 
 <br>
 
+## Sobota 4 stycznia 13:00
+- Eksport historii pomiarów do pliku
+
+
+## Sobota 28 grudnia 13:00
+- Historia pomiarów - UI, baza i backend
+- Wszystkie miejscowości są w bazie, łącznie z wsiami, ponad 40k miejsc
+
+## Sobota 21 grudnia 13:00
+- Zreleasowanie wersji 1.4.2
+- Rozplanowanie zadań odn. do zapisu historii pomiarów...
+- ... i eksportu historii
+
+## Piątek 13 grudnia 20:30
+- Odczytywanie danych lokalizacyjnych z GPS...
+- zamiast używania Google geolocation API, które zostało usunięte
+- Dodanie paska menu
+- Dodanie wyszukiwarki miejscowości (WiP)
+- Logo i ikona aplikacji
+
+## Piątek 6 grudnia 20:30
+- Zakończony research nt. odczytywania danych z GPS telefonu
+- Kolor w aplikacji zmienia się w zależności od jakości powietrza
+
+## Piątek 29 listopada 20:30
+- Ekran startowy z instrukcją użytkowania
+- Instrukcja jest też dostępna z wnętrza aplikacji
+
+
+## Piątek 22 listopada 20:30
+- Otagowanie i zreleasowanie wersji 1.0.0
 
 ## Piętek 15 listopada 20:30
 - Integracja z interfejsem użytkownika
