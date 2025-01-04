@@ -125,16 +125,19 @@ fun checkStoragePermission(context: Context){
     }
 
 }
+
+private const val NightTime = "18:00"
+
 @Composable
 fun getImageBitmap(): ImageBitmap {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val time = LocalDateTime.now().format(formatter)
-    if(LocalTime.parse(time, formatter) > LocalTime.parse("19:00", formatter))
+    if(LocalTime.parse(time, formatter) > LocalTime.parse(NightTime, formatter))
         return ImageBitmap.imageResource(id =R.drawable.background_night)
     return ImageBitmap.imageResource(id =R.drawable.background_day)
 }
 fun checkIfIsNight(): Boolean {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val time = LocalDateTime.now().format(formatter)
-    return LocalTime.parse(time, formatter) > LocalTime.parse("19:00", formatter)
+    return LocalTime.parse(time, formatter) > LocalTime.parse(NightTime, formatter)
 }
