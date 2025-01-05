@@ -46,10 +46,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
@@ -62,6 +65,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
@@ -290,7 +294,21 @@ fun MainView(
     val selectedIndex = remember { mutableIntStateOf(0) } // Zapamiętuje wybraną zakładkę
     val background = getImageBitmap()
 
-    Column(Modifier.drawBehind { drawImage(background) }) {
+    Column(Modifier.fillMaxWidth().drawBehind {
+        val widthScaleFactor = size.width / background.width
+        val heightScaleFactor = (size.height / 2) / background.height
+        drawIntoCanvas { canvas ->
+            with(canvas.nativeCanvas){
+                save()
+                scale(widthScaleFactor, heightScaleFactor)
+                drawImage(
+                    background,
+                    Offset(0f, 0f)
+                )
+                restore()
+            }
+        }
+    }) {
         Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
             // Przycisk po prawej stronie (oryginalny kod)
 
