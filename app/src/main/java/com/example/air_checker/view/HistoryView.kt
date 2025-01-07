@@ -2,15 +2,14 @@ package com.example.air_checker.view
 
 import android.os.Bundle
 import android.os.Environment
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +30,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -41,6 +39,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,25 +59,26 @@ class HistoryActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            HistoryView()
+            val items = readRecordsFromDatabase(this).history
+            HistoryView(items)
         }
     }
 }
 
 @Composable
-fun HistoryView() {
+fun HistoryView(items: List<Measure>) {
 //    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
 //    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState()}
     val context = LocalContext.current
-    val items = readRecordsFromDatabase(context).history
     val selectedIndex = remember { mutableIntStateOf(3) }
     var currentIndex by remember { mutableIntStateOf(0) }
     val displayedItems = remember { mutableStateListOf<Measure>() }
     var currentItem by remember { mutableIntStateOf(0) }
     Column(
-        Modifier
+        verticalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier
             .statusBarsPadding()
             .navigationBarsPadding()
             .fillMaxSize()
@@ -136,7 +136,6 @@ fun HistoryView() {
                     }
                 }
             }
-            Log.d("item", currentItem.toString())
             if (currentItem < items.size - 1){
                 // Dolna maska
                 Box(
@@ -202,9 +201,9 @@ fun HistoryView() {
                 color = Color.Black
             )
         }
+        SnackbarHost(hostState = snackBarHostState)
+        NavMenu(selectedIndex.intValue)
     }
-    SnackbarHost(hostState = snackBarHostState)
-    NavMenu(selectedIndex.intValue)
 }
 
 @Composable
@@ -297,9 +296,21 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
 }
 
 
-@Preview(showBackground = true)
+@Preview(name = "NEXUS_5", device = Devices.NEXUS_5, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_6", device = Devices.NEXUS_6, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_5X", device = Devices.NEXUS_5X, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_6P", device = Devices.NEXUS_6P, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL", device = Devices.PIXEL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_XL", device = Devices.PIXEL_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_2", device = Devices.PIXEL_2, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_2_XL", device = Devices.PIXEL_2_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3", device = Devices.PIXEL_3, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3_XL", device = Devices.PIXEL_3_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3A", device = Devices.PIXEL_3A, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3A_XL", device = Devices.PIXEL_3A_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_4", device = Devices.PIXEL_4, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_4_XL", device = Devices.PIXEL_4_XL, apiLevel = 33, showBackground = true)
 @Composable
 fun HistoryPreview() {
-    HistoryView()
+    HistoryView(listOf())
 }
-

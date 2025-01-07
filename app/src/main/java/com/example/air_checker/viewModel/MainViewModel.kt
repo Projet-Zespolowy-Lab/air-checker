@@ -15,7 +15,6 @@ import androidx.core.app.ActivityCompat
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
-import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import com.example.air_checker.R
 import com.example.air_checker.model.AirQualityCategories
@@ -132,13 +131,14 @@ fun checkStoragePermission(context: Context){
 
 }
 
+private const val DayTime = "06:00"
 private const val NightTime = "18:00"
 
 @Composable
 fun getImageBitmap(): ImageBitmap {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val time = LocalDateTime.now().format(formatter)
-    if(LocalTime.parse(time, formatter) > LocalTime.parse(NightTime, formatter))
+    if(LocalTime.parse(time, formatter) > LocalTime.parse(NightTime, formatter) || LocalTime.parse(time, formatter) < LocalTime.parse(DayTime, formatter))
         return ImageBitmap.imageResource(id =R.drawable.background_night)
     return ImageBitmap.imageResource(id =R.drawable.background_day)
 }
@@ -146,7 +146,7 @@ fun getImageBitmap(): ImageBitmap {
 fun checkIfIsNight(): Boolean {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val time = LocalDateTime.now().format(formatter)
-    return LocalTime.parse(time, formatter) > LocalTime.parse(NightTime, formatter)
+    return (LocalTime.parse(time, formatter) > LocalTime.parse(NightTime, formatter) || LocalTime.parse(time, formatter) < LocalTime.parse(DayTime, formatter))
 }
 
 // Funkcja nasłuchująca stanu połączenia sieciowego

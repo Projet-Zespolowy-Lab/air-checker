@@ -21,11 +21,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -81,7 +80,6 @@ import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
 import com.example.air_checker.viewModel.getScreenHeight
-import com.example.air_checker.viewModel.getScreenWidth
 import com.example.air_checker.viewModel.initUpdates
 import com.example.air_checker.viewModel.isNetworkAvailable
 import com.example.air_checker.viewModel.observeNetworkConnectivity
@@ -111,7 +109,7 @@ class MainActivity : ComponentActivity() {
         observeNetworkConnectivity(this, stationsViewModel)
 
         if(intent.getStringExtra("wybrane_miasto_nazwa") == null){
-            // Regularne pobieranie lokalizacji i stacji co sekunde
+            // Regularne pobieranie lokalizacji i stacji co sekundę
             lifecycleScope.launch {
                 while (true) {
                     if (isNetworkAvailable(this@MainActivity)) {
@@ -122,7 +120,7 @@ class MainActivity : ComponentActivity() {
                         Log.d("MainActivity", "Brak połączenia z internetem")
                     }
 
-                    delay(1000) // odświeżanie co sekunde
+                    delay(1000) // odświeżanie co sekundę
                 }
             }
 
@@ -140,7 +138,7 @@ class MainActivity : ComponentActivity() {
         }
         else
         {
-            // Regularne pobieranie lokalizacji i stacji co sekunde
+            // Regularne pobieranie lokalizacji i stacji co sekundę
             lifecycleScope.launch {
                 while (true) {
                     if (isNetworkAvailable(this@MainActivity)) {
@@ -150,7 +148,7 @@ class MainActivity : ComponentActivity() {
                         Log.d("MainActivity", "Brak połączenia z internetem")
                     }
 
-                    delay(1000) // odświeżanie co sekunde
+                    delay(1000) // odświeżanie co sekundę
                 }
             }
             lifecycleScope.launch {
@@ -171,23 +169,21 @@ class MainActivity : ComponentActivity() {
             val nearestStation by stationsViewModel.nearestStation.observeAsState()
             val networkError by stationsViewModel.networkError.observeAsState(false)
             nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
-            Column {
+            Column{
                 when {
                     networkError -> {
                         // Komunikat o braku internetu
                         Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
                     }
                 }
-
-
-            }
-            if(isNetworkAvailable(this)){
-                MainView(nearestStation, airQualityCategories, this, nazwaMiasta)
-            }
-            else{
-                MainView(
-                    Station(0, "", 0.0, 0.0), AirQualityCategories(listOf()), this, nazwaMiasta
-                )
+                if(isNetworkAvailable(this@MainActivity)){
+                    MainView(nearestStation, airQualityCategories, this@MainActivity, nazwaMiasta)
+                }
+                else{
+                    MainView(
+                        Station(0, "", 0.0, 0.0), AirQualityCategories(listOf()), this@MainActivity, nazwaMiasta
+                    )
+                }
             }
         }
     }
@@ -251,20 +247,20 @@ fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
     }
 }
 
-@Preview(name = "NEXUS_5", device = Devices.NEXUS_5, apiLevel = 33)
-@Preview(name = "NEXUS_6", device = Devices.NEXUS_6, apiLevel = 33)
-@Preview(name = "NEXUS_5X", device = Devices.NEXUS_5X, apiLevel = 33)
-@Preview(name = "NEXUS_6P", device = Devices.NEXUS_6P, apiLevel = 33)
-@Preview(name = "PIXEL", device = Devices.PIXEL, apiLevel = 33)
-@Preview(name = "PIXEL_XL", device = Devices.PIXEL_XL, apiLevel = 33)
-@Preview(name = "PIXEL_2", device = Devices.PIXEL_2, apiLevel = 33)
-@Preview(name = "PIXEL_2_XL", device = Devices.PIXEL_2_XL, apiLevel = 33)
-@Preview(name = "PIXEL_3", device = Devices.PIXEL_3, apiLevel = 33)
-@Preview(name = "PIXEL_3_XL", device = Devices.PIXEL_3_XL, apiLevel = 33)
-@Preview(name = "PIXEL_3A", device = Devices.PIXEL_3A, apiLevel = 33)
-@Preview(name = "PIXEL_3A_XL", device = Devices.PIXEL_3A_XL, apiLevel = 33)
-@Preview(name = "PIXEL_4", device = Devices.PIXEL_4, apiLevel = 33)
-@Preview(name = "PIXEL_4_XL", device = Devices.PIXEL_4_XL, apiLevel = 33)
+@Preview(name = "NEXUS_5", device = Devices.NEXUS_5, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_6", device = Devices.NEXUS_6, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_5X", device = Devices.NEXUS_5X, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_6P", device = Devices.NEXUS_6P, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL", device = Devices.PIXEL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_XL", device = Devices.PIXEL_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_2", device = Devices.PIXEL_2, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_2_XL", device = Devices.PIXEL_2_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3", device = Devices.PIXEL_3, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3_XL", device = Devices.PIXEL_3_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3A", device = Devices.PIXEL_3A, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3A_XL", device = Devices.PIXEL_3A_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_4", device = Devices.PIXEL_4, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_4_XL", device = Devices.PIXEL_4_XL, apiLevel = 33, showBackground = true)
 @Composable
 fun MainViewPreview(){
     MainView(Station(999, "Warsaw", 0.0, 0.0, 0.0), AirQualityCategories(listOf()), LocalContext.current, "")
@@ -276,9 +272,11 @@ fun MainView(nearestStation: Station?, airQuality: AirQualityCategories?, contex
     val selectedIndex = remember { mutableIntStateOf(0) } // Zapamiętuje wybraną zakładkę
     val background = getImageBitmap()
 
-    Column(Modifier.fillMaxSize().systemBarsPadding().drawBehind {
+    Column(
+        verticalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxSize().navigationBarsPadding().drawBehind {
         val widthScaleFactor = size.width / background.width
-        val heightScaleFactor = (size.height * 0.4f) / background.height
+        val heightScaleFactor = (size.height * 0.5f) / background.height
         // Rysowanie background
         drawIntoCanvas { canvas ->
             with(canvas.nativeCanvas){
@@ -302,7 +300,7 @@ fun MainView(nearestStation: Station?, airQuality: AirQualityCategories?, contex
                         .padding(
                             start = 30.dp,
                             end = 30.dp,
-                            top = 20.dp,
+                            top = 30.dp,
                         ), // Padding top, aby ustawić je odpowiednio od góry
                     horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
                 ) {
@@ -351,7 +349,7 @@ fun MainView(nearestStation: Station?, airQuality: AirQualityCategories?, contex
                         .padding(
                             start = 30.dp,
                             end = 30.dp,
-                            top = 20.dp,
+                            top = 30.dp,
                         ), // Padding top, aby ustawić je odpowiednio od góry
                     horizontalArrangement = Arrangement.End // Umieszcza przycisk na końcu strony
                 ) {
@@ -403,7 +401,7 @@ fun MainView(nearestStation: Station?, airQuality: AirQualityCategories?, contex
                         text = "AIR METER",
                         fontSize = 20.sp,
                         fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                        modifier = Modifier.align(Alignment.TopCenter).offset(y = 20.dp)
+                        modifier = Modifier.align(Alignment.TopCenter).offset(y = (getScreenHeight() * 0.02f).dp)
                     )
                     Box(modifier = Modifier.align(Alignment.Center)){
                         Text(
@@ -413,18 +411,18 @@ fun MainView(nearestStation: Station?, airQuality: AirQualityCategories?, contex
                                     "Krajowy indeks jakości powietrza"
                                 )
                             ),
-                            fontSize = 75.sp,
+                            fontSize = 70.sp,
                             fontFamily = FontFamily(Font(R.font.prompt)),
                             maxLines = 1,
                             fontWeight = FontWeight(250),
-                            modifier = Modifier.align(Alignment.Center).offset(y = (-20).dp)
+                            modifier = Modifier.align(Alignment.Center).offset(y = -(getScreenHeight() * 0.0001f).dp)
                         )
                     }
                     Text(
                         text = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
                         fontSize = 20.sp,
                         fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                        modifier = Modifier.align(Alignment.BottomCenter).offset(y = (-30).dp)
+                        modifier = Modifier.align(Alignment.BottomCenter).offset(y = -(getScreenHeight() * 0.02f).dp)
                     )
 
             }
@@ -513,13 +511,12 @@ fun MainView(nearestStation: Station?, airQuality: AirQualityCategories?, contex
     @Composable
 fun NavMenu(selectedIndex: Int) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val context = LocalContext.current
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(),
-        contentAlignment = Alignment.BottomCenter
-    ) {
+        val context = LocalContext.current
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(),
+            contentAlignment = Alignment.BottomCenter
+        ){
         Spacer(modifier = Modifier.height((getScreenHeight() * 0.001f).dp)) // Przestrzeń nad paskiem menu
 
         Box(
