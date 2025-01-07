@@ -1,10 +1,7 @@
 package com.example.air_checker.view
 
-import android.app.Activity
+import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -24,11 +21,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,9 +42,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -57,6 +56,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -70,13 +70,19 @@ import com.example.air_checker.model.places
 import com.example.air_checker.viewModel.AirQualityIndexViewModel
 import com.example.air_checker.viewModel.LocationViewModel
 import com.example.air_checker.viewModel.StationsViewModel
+import com.example.air_checker.viewModel.checkIfIsNight
 import com.example.air_checker.viewModel.checkPermissions
 import com.example.air_checker.viewModel.checkStoragePermission
+import com.example.air_checker.viewModel.findActivity
 import com.example.air_checker.viewModel.getColor
+import com.example.air_checker.viewModel.getImageBitmap
 import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
+import com.example.air_checker.viewModel.getScreenHeight
 import com.example.air_checker.viewModel.initUpdates
+import com.example.air_checker.viewModel.isNetworkAvailable
+import com.example.air_checker.viewModel.observeNetworkConnectivity
 import fetchAllPlaces
 import insertRecordToDatabase
 import kotlinx.coroutines.delay
@@ -88,26 +94,25 @@ class MainActivity : ComponentActivity() {
     private val stationsViewModel: StationsViewModel by viewModels()
     private val airQualityIndexViewModel: AirQualityIndexViewModel by viewModels()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+        // Sprawdzenie permisji odnośnie lokalizacji i pamięci
         checkPermissions(this)
         checkStoragePermission(this)
-        val viewModel = LocationViewModel()
 
+        val viewModel = LocationViewModel()
         //Załadowanie danych miejscowości
         places = fetchAllPlaces(this)
-
+        val nazwaMiasta = intent.getStringExtra("wybrane_miasto_nazwa")
         // Obserwacja połączenia sieciowego
-        observeNetworkConnectivity()
+        observeNetworkConnectivity(this, stationsViewModel)
 
         if(intent.getStringExtra("wybrane_miasto_nazwa") == null){
-            // Regularne pobieranie lokalizacji i stacji co sekunde
+            // Regularne pobieranie lokalizacji i stacji co sekundę
             lifecycleScope.launch {
                 while (true) {
-                    if (isNetworkAvailable()) {
+                    if (isNetworkAvailable(this@MainActivity)) {
                         initUpdates(viewModel, this@MainActivity)
                         stationsViewModel.setNetworkError(false) // reset błędu sieci
                     } else {
@@ -115,13 +120,13 @@ class MainActivity : ComponentActivity() {
                         Log.d("MainActivity", "Brak połączenia z internetem")
                     }
 
-                    delay(1000) // odświeżanie co sekunde
+                    delay(1000) // odświeżanie co sekundę
                 }
             }
 
             lifecycleScope.launch {
                 viewModel.state.collectLatest { coordinates ->
-                    if (isNetworkAvailable() && coordinates.latitude != 0.0 && coordinates.longitude != 0.0) {
+                    if (isNetworkAvailable(this@MainActivity) && coordinates.latitude != 0.0 && coordinates.longitude != 0.0) {
                         stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
                         stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
                     } else {
@@ -133,21 +138,21 @@ class MainActivity : ComponentActivity() {
         }
         else
         {
-            // Regularne pobieranie lokalizacji i stacji co sekunde
+            // Regularne pobieranie lokalizacji i stacji co sekundę
             lifecycleScope.launch {
                 while (true) {
-                    if (isNetworkAvailable()) {
+                    if (isNetworkAvailable(this@MainActivity)) {
                         stationsViewModel.setNetworkError(false) // reset błędu sieci
                     } else {
                         stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
                         Log.d("MainActivity", "Brak połączenia z internetem")
                     }
 
-                    delay(1000) // odświeżanie co sekunde
+                    delay(1000) // odświeżanie co sekundę
                 }
             }
             lifecycleScope.launch {
-                if (isNetworkAvailable()) {
+                if (isNetworkAvailable(this@MainActivity)) {
                     stationsViewModel.fetchStations(
                         intent.getDoubleExtra("wybrane_miasto_lat", 0.0), intent.getDoubleExtra("wybrane_miasto_lon", 0.0)
                     )
@@ -160,61 +165,33 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            NearestStation(stationsViewModel = stationsViewModel,
-                airQualityIndexViewModel = airQualityIndexViewModel, ::isNetworkAvailable)
+            val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
+            val nearestStation by stationsViewModel.nearestStation.observeAsState()
+            val networkError by stationsViewModel.networkError.observeAsState(false)
+            nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
+            Column{
+                when {
+                    networkError -> {
+                        // Komunikat o braku internetu
+                        Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
+                    }
+                }
+                if(isNetworkAvailable(this@MainActivity)){
+                    MainView(nearestStation, airQualityCategories, this@MainActivity, nazwaMiasta)
+                }
+                else{
+                    MainView(
+                        Station(0, "", 0.0, 0.0), AirQualityCategories(listOf()), this@MainActivity, nazwaMiasta
+                    )
+                }
+            }
         }
     }
 
 
-    // Funkcja nasłuchująca stanu połączenia sieciowego
-    private fun observeNetworkConnectivity() {
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                stationsViewModel.setNetworkError(false)
-            }
 
-            override fun onLost(network: Network) {
-                stationsViewModel.setNetworkError(true)
-            }
-        })
-    }
-
-    // Funkcja sprawdzająca dostępność połączenia sieciowego (na żądanie)
-    private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
 }
 
-
-
-@Composable
-fun NearestStation(stationsViewModel: StationsViewModel,
-                       airQualityIndexViewModel: AirQualityIndexViewModel, isNetworkAvailable: ()->Boolean)
-{
-    val nearestStation by stationsViewModel.nearestStation.observeAsState()
-    val networkError by stationsViewModel.networkError.observeAsState(false)
-
-    Column {
-        when {
-            networkError -> {
-                // Komunikat o braku internetu
-                Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
-            }
-        }
-        val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
-        nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
-        if(isNetworkAvailable()){
-            MainView(nearestStation, airQualityCategories)
-        }
-        else{
-            MainView(Station(0, "", 0.0, 0.0))
-        }
-    }
-}
 
 @Composable
 fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
@@ -270,26 +247,63 @@ fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "NEXUS_5", device = Devices.NEXUS_5, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_6", device = Devices.NEXUS_6, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_5X", device = Devices.NEXUS_5X, apiLevel = 33, showBackground = true)
+@Preview(name = "NEXUS_6P", device = Devices.NEXUS_6P, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL", device = Devices.PIXEL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_XL", device = Devices.PIXEL_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_2", device = Devices.PIXEL_2, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_2_XL", device = Devices.PIXEL_2_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3", device = Devices.PIXEL_3, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3_XL", device = Devices.PIXEL_3_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3A", device = Devices.PIXEL_3A, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_3A_XL", device = Devices.PIXEL_3A_XL, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_4", device = Devices.PIXEL_4, apiLevel = 33, showBackground = true)
+@Preview(name = "PIXEL_4_XL", device = Devices.PIXEL_4_XL, apiLevel = 33, showBackground = true)
 @Composable
-fun MainView(
-    nearestStation: Station? = Station(999, "Warsaw", 0.0, 0.0, 0.0),
-    airQuality: AirQualityCategories? = AirQualityCategories(listOf())
-) {
-    val context = LocalContext.current
-    val activity = context as Activity
-    val intent  = activity.intent
-    val selectedIndex = remember { mutableIntStateOf(0) } // Zapamiętuje wybraną zakładkę
+fun MainViewPreview(){
+    MainView(Station(999, "Warsaw", 0.0, 0.0, 0.0), AirQualityCategories(listOf()), LocalContext.current, "")
+}
 
-    Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
-        // Przycisk po prawej stronie (oryginalny kod)
-        if(intent.getStringExtra("wybrane_miasto_nazwa") != null) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
-                horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
-            ) {
+@Composable
+fun MainView(nearestStation: Station?, airQuality: AirQualityCategories?, context: Context, nazwaMiasta: String?) {
+    val activity = context.findActivity()
+    val selectedIndex = remember { mutableIntStateOf(0) } // Zapamiętuje wybraną zakładkę
+    val background = getImageBitmap()
+
+    Column(
+        verticalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxSize().navigationBarsPadding().drawBehind {
+        val widthScaleFactor = size.width / background.width
+        val heightScaleFactor = (size.height * 0.5f) / background.height
+        // Rysowanie background
+        drawIntoCanvas { canvas ->
+            with(canvas.nativeCanvas){
+                save()
+                // Skalowanie obrazku
+                scale(widthScaleFactor, heightScaleFactor)
+                drawImage(
+                    background,
+                    Offset(0f, 0f)
+                )
+                restore()
+            }
+        }
+    }) {
+            // Przycisk po prawej stronie (oryginalny kod)
+
+            if (nazwaMiasta != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 30.dp,
+                            end = 30.dp,
+                            top = 30.dp,
+                        ), // Padding top, aby ustawić je odpowiednio od góry
+                    horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
+                ) {
                     // Przycisk po lewej stronie
                     TextButton(
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -298,202 +312,212 @@ fun MainView(
                         contentPadding = PaddingValues(0.dp),
                         onClick = {
                             val newIntent = Intent(context, MainActivity::class.java)
-                            activity.startActivity(newIntent)
+                            activity?.startActivity(newIntent)
                         },
                     ) {
                         Image(
-                            painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
+                            painter = if (checkIfIsNight()) painterResource(R.drawable.arrow_back_white) else painterResource(R.drawable.arrow_black), // Obrazek strzałki
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .fillMaxSize()
                         )
                     }
-                // Przycisk po prawej stronie
-                TextButton(
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    shape = RectangleShape,
-                    modifier = Modifier.size(30.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    onClick = {
-                        val newIntent = Intent(context, HistoryActivity::class.java)
-                        context.startActivity(newIntent)
-                    },
+                    // Przycisk po prawej stronie
+                    TextButton(
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        shape = RectangleShape,
+                        modifier = Modifier.size(30.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        onClick = {
+                            val newIntent = Intent(context, HistoryActivity::class.java)
+                            context.startActivity(newIntent)
+                        },
+                    ) {
+                        Image(
+                            painter = if (checkIfIsNight()) painterResource(R.drawable.menu_white) else painterResource(R.drawable.menu_black),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = 30.dp,
+                            end = 30.dp,
+                            top = 30.dp,
+                        ), // Padding top, aby ustawić je odpowiednio od góry
+                    horizontalArrangement = Arrangement.End // Umieszcza przycisk na końcu strony
                 ) {
-                    Image(
-                        painter = painterResource(R.drawable.menu_black),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+
+                    // Przycisk po prawej stronie
+                    TextButton(
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        shape = RectangleShape,
+                        modifier = Modifier.size(30.dp),
+                        contentPadding = PaddingValues(0.dp),
+                        onClick = {
+                            val newIntent = Intent(context, HistoryActivity::class.java)
+                            context.startActivity(newIntent)
+                        },
+                    ) {
+                        Image(
+                            painter = if (checkIfIsNight()) painterResource(R.drawable.menu_white) else painterResource(R.drawable.menu_black),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
                 }
             }
-        }
-        else
-        {
-            Row(
+            Spacer(Modifier.height(10.dp))
+            Box (
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 30.dp, end = 30.dp, top = 30.dp, bottom = 10.dp), // Padding top, aby ustawić je odpowiednio od góry
-                horizontalArrangement = Arrangement.End // Umieszcza przycisk na końcu strony
+                    .height((getScreenHeight() * 0.09f).dp)
+                    .drawBehind {
+                        drawCircle(
+                            color = Color(
+                                getColor(
+                                    getQuality(
+                                        airQuality,
+                                        "Krajowy indeks jakości powietrza"
+                                    )
+                                )
+                            ),
+                            radius = getScreenHeight() * 0.13f
+                        )
+                        drawCircle(
+                            color = Color(0xFFFFE9C9),
+                            radius = getScreenHeight() * 0.125f
+                        )
+                    }
             ) {
-
-                // Przycisk po prawej stronie
-                TextButton(
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    shape = RectangleShape,
-                    modifier = Modifier.size(30.dp),
-                    contentPadding = PaddingValues(0.dp),
-                    onClick = {
-                        val newIntent = Intent(context, HistoryActivity::class.java)
-                        context.startActivity(newIntent)
-                    },
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.menu_black),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
+                    Text(
+                        text = "AIR METER",
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                        modifier = Modifier.align(Alignment.TopCenter).offset(y = (getScreenHeight() * 0.02f).dp)
                     )
-                }
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .size(240.dp)
-                .drawBehind {
-                    drawCircle(
-                        color = Color(
-                            getColor(
+                    Box(modifier = Modifier.align(Alignment.Center)){
+                        Text(
+                            text = getPercentageAirPurity(
                                 getQuality(
                                     airQuality,
                                     "Krajowy indeks jakości powietrza"
                                 )
-                            )
-                        ),
-                        radius = 320f
+                            ),
+                            fontSize = 70.sp,
+                            fontFamily = FontFamily(Font(R.font.prompt)),
+                            maxLines = 1,
+                            fontWeight = FontWeight(250),
+                            modifier = Modifier.align(Alignment.Center).offset(y = -(getScreenHeight() * 0.0001f).dp)
+                        )
+                    }
+                    Text(
+                        text = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
+                        fontSize = 20.sp,
+                        fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                        modifier = Modifier.align(Alignment.BottomCenter).offset(y = -(getScreenHeight() * 0.02f).dp)
                     )
-                    drawCircle(
-                        color = Color(0xFFFFE9C9),
-                        radius = 305f
+
+            }
+
+            Spacer(Modifier.height(30.dp))
+
+            Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                Image(
+                    painter = if (checkIfIsNight()) painterResource(R.drawable.arrow_white) else painterResource(R.drawable.arrow),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(15.dp, 15.dp)
+                        .align(Alignment.CenterVertically)
+                )
+                Spacer(Modifier.width(5.dp))
+                Text(
+                    text = getNameNearestStation(nearestStation) + ", PL",
+                    fontSize = 14.sp,
+                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
+                    color = if (checkIfIsNight()) Color.White else Color.Black
+                )
+            }
+
+
+            Spacer(Modifier.height(30.dp))
+
+            Column(verticalArrangement = Arrangement.spacedBy((getScreenHeight() * 0.011f).dp)) {
+                IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
+                IndexField("PM 10", getQuality(airQuality, "PM10"))
+                IndexField("NO₂", getQuality(airQuality, "NO2"))
+                IndexField("SO₂", getQuality(airQuality, "SO2"))
+                IndexField("O₃", getQuality(airQuality, "O3"))
+            }
+            Spacer(modifier = Modifier.height((getScreenHeight() * 0.001f).dp)) // Przestrzeń nad przyciskiem
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(), // Rozciągnij Box na całą szerokość
+                horizontalArrangement = Arrangement.Center // Wyrównaj przycisk na środku
+            ) {
+                Button(
+                    onClick = {
+                        // Obsługa kliknięcia przycisku+
+                        val measure = Measure(
+                            place = getNameNearestStation(nearestStation),
+                            qualityIndex = 78.3,
+                            qualityCategory = getQuality(
+                                airQuality,
+                                "Krajowy indeks jakości powietrza"
+                            ),
+                            color = getColor(
+                                getQuality(
+                                    airQuality,
+                                    "Krajowy indeks jakości powietrza"
+                                )
+                            ).toString(),
+                            pm10 = getQuality(airQuality, "PM10"),
+                            pm25 = getQuality(airQuality, "PM2.5"),
+                            no2 = getQuality(airQuality, "NO2"),
+                            so2 = getQuality(airQuality, "SO2"),
+                            o3 = getQuality(airQuality, "O3"),
+                        )
+                        insertRecordToDatabase(context, measure)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF80E4FF), // Kolor tła przycisku
+                        contentColor = Color(0xFF3F3F3F) // Kolor tekstu
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .width(140.dp)  // Szerokość przycisku
+                        .height(38.dp)  // Wysokość przycisku
+                ) {
+                    Text(
+                        text = "Zapisz pomiar",
+                        fontSize = 14.sp, // Ustawienie rozmiaru tekstu na 14
                     )
                 }
-        ) {
-            Column(modifier = Modifier.align(Alignment.TopCenter)) {
-                Text(
-                    text = "AIR METER",
-                    fontSize = 20.sp,
-                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp)
-                        .padding(top = 15.dp)
-                )
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    text = getPercentageAirPurity(
-                        getQuality(
-                            airQuality,
-                            "Krajowy indeks jakości powietrza"
-                        )
-                    ),
-                    fontSize = 75.sp,
-                    fontFamily = FontFamily(Font(R.font.prompt)),
-                    fontWeight = FontWeight(250),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    text = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
-                    fontSize = 20.sp,
-                    fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                    modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = (-30).dp)
-                )
             }
+
+            NavMenu(selectedIndex.intValue)
         }
 
-        Spacer(Modifier.height(20.dp))
-
-        Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Image(
-                painter = painterResource(R.drawable.arrow),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(15.dp, 15.dp)
-                    .align(Alignment.CenterVertically)
-            )
-            Spacer(Modifier.width(5.dp))
-            Text(
-                text = getNameNearestStation(nearestStation) + ", PL",
-                fontSize = 14.sp,
-                fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-            )
-        }
-
-        Spacer(Modifier.height(50.dp))
-
-        Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
-            IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
-            IndexField("PM 10", getQuality(airQuality, "PM10"))
-            IndexField("NO₂", getQuality(airQuality, "NO2"))
-            IndexField("SO₂", getQuality(airQuality, "SO2"))
-            IndexField("O₃", getQuality(airQuality, "O3"))
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(), // Rozciągnij Box na całą szerokość
-            contentAlignment = Alignment.Center // Wyrównaj przycisk na środku
-        ) {
-            Button(
-                onClick = {
-                    // Obsługa kliknięcia przycisku+
-                    val measure = Measure(
-                        place = getNameNearestStation(nearestStation),
-                        qualityIndex = 78.3,
-                        qualityCategory = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
-                        color = getColor(getQuality(airQuality, "Krajowy indeks jakości powietrza")).toString(),
-                        pm10 = getQuality(airQuality, "PM10"),
-                        pm25 = getQuality(airQuality, "PM2.5"),
-                        no2 = getQuality(airQuality, "NO2"),
-                        so2 = getQuality(airQuality, "SO2"),
-                        o3 = getQuality(airQuality, "O3"),
-                    )
-                    insertRecordToDatabase(context, measure)
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF80E4FF), // Kolor tła przycisku
-                    contentColor = Color(0xFF3F3F3F) // Kolor tekstu
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .width(140.dp)  // Szerokość przycisku
-                    .height(38.dp)  // Wysokość przycisku
-            ) {
-                Text(
-                    text = "Zapisz pomiar",
-                    fontSize = 14.sp, // Ustawienie rozmiaru tekstu na 14
-                )
-            }
-        }
-
-        NavMenu(selectedIndex.intValue)
-    }
 }
 
     @Composable
 fun NavMenu(selectedIndex: Int) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-    val context = LocalContext.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        //Spacer(modifier = Modifier.height(24.dp)) // Przestrzeń nad paskiem menu
+        val context = LocalContext.current
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(),
+            contentAlignment = Alignment.BottomCenter
+        ){
+        Spacer(modifier = Modifier.height((getScreenHeight() * 0.001f).dp)) // Przestrzeń nad paskiem menu
 
         Box(
             modifier = Modifier

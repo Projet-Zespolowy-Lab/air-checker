@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,11 +39,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.air_checker.R
 import com.example.air_checker.model.Place
 import com.example.air_checker.model.places
 import com.example.air_checker.viewModel.filterPlacesByFirstLetter
 import com.example.air_checker.viewModel.loadMoreItems
-import com.example.air_checker.R
 
 class CityFinderActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,15 +61,16 @@ class CityFinderActivity : ComponentActivity() {
 fun CityFinderView() {
 
     Column(
+        verticalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier
             .statusBarsPadding()
             .systemBarsPadding()
             .fillMaxSize()
     ) {
         var items = filterPlacesByFirstLetter(places, "")
-        val selectedIndex = remember { mutableStateOf(1) }
+        val selectedIndex = remember { mutableIntStateOf(1) }
         val displayedItems = remember { mutableStateListOf<Place>() }
-        var currentIndex by remember { mutableStateOf(0) }
+        var currentIndex by remember { mutableIntStateOf(0) }
         val screenHeight = LocalConfiguration.current.screenHeightDp.dp
         var text by remember { mutableStateOf(TextFieldValue("")) }
         val filteredItems = if (text.text.isEmpty()) displayedItems else filterPlacesByFirstLetter(places, text.text)
@@ -128,6 +131,6 @@ fun CityFinderView() {
                 }
             }
         }
-        NavMenu(selectedIndex.value)
+        NavMenu(selectedIndex.intValue)
     }
 }
