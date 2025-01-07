@@ -4,12 +4,18 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.os.Looper
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.imageResource
 import androidx.core.app.ActivityCompat
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import com.example.air_checker.R
 import com.example.air_checker.model.AirQualityCategories
@@ -136,8 +142,49 @@ fun getImageBitmap(): ImageBitmap {
         return ImageBitmap.imageResource(id =R.drawable.background_night)
     return ImageBitmap.imageResource(id =R.drawable.background_day)
 }
+
 fun checkIfIsNight(): Boolean {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     val time = LocalDateTime.now().format(formatter)
     return LocalTime.parse(time, formatter) > LocalTime.parse(NightTime, formatter)
+}
+
+// Funkcja nasłuchująca stanu połączenia sieciowego
+fun observeNetworkConnectivity(context: Context, stationsViewModel: StationsViewModel) {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            stationsViewModel.setNetworkError(false)
+        }
+
+        override fun onLost(network: Network) {
+            stationsViewModel.setNetworkError(true)
+        }
+    })
+}
+
+
+// Funkcja sprawdzająca dostępność połączenia sieciowego (na żądanie)
+fun isNetworkAvailable(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}
+
+fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
+}
+
+fun getScreenWidth(): Int {
+    return Resources.getSystem().displayMetrics.widthPixels;
+}
+
+fun getScreenHeight(): Int {
+    return Resources.getSystem().displayMetrics.heightPixels;
 }

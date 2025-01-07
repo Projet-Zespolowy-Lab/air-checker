@@ -1,10 +1,7 @@
 package com.example.air_checker.view
 
-import android.app.Activity
+import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -49,23 +46,20 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
@@ -80,46 +74,47 @@ import com.example.air_checker.viewModel.StationsViewModel
 import com.example.air_checker.viewModel.checkIfIsNight
 import com.example.air_checker.viewModel.checkPermissions
 import com.example.air_checker.viewModel.checkStoragePermission
+import com.example.air_checker.viewModel.findActivity
 import com.example.air_checker.viewModel.getColor
 import com.example.air_checker.viewModel.getImageBitmap
 import com.example.air_checker.viewModel.getNameNearestStation
 import com.example.air_checker.viewModel.getPercentageAirPurity
 import com.example.air_checker.viewModel.getQuality
+import com.example.air_checker.viewModel.getScreenHeight
+import com.example.air_checker.viewModel.getScreenWidth
 import com.example.air_checker.viewModel.initUpdates
+import com.example.air_checker.viewModel.isNetworkAvailable
+import com.example.air_checker.viewModel.observeNetworkConnectivity
 import fetchAllPlaces
 import insertRecordToDatabase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
 
 
 class MainActivity : ComponentActivity() {
     private val stationsViewModel: StationsViewModel by viewModels()
     private val airQualityIndexViewModel: AirQualityIndexViewModel by viewModels()
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+        // Sprawdzenie permisji odnośnie lokalizacji i pamięci
         checkPermissions(this)
         checkStoragePermission(this)
-        val viewModel = LocationViewModel()
 
+        val viewModel = LocationViewModel()
         //Załadowanie danych miejscowości
         places = fetchAllPlaces(this)
-
+        val nazwaMiasta = intent.getStringExtra("wybrane_miasto_nazwa")
         // Obserwacja połączenia sieciowego
-        observeNetworkConnectivity()
+        observeNetworkConnectivity(this, stationsViewModel)
 
         if(intent.getStringExtra("wybrane_miasto_nazwa") == null){
             // Regularne pobieranie lokalizacji i stacji co sekunde
             lifecycleScope.launch {
                 while (true) {
-                    if (isNetworkAvailable()) {
+                    if (isNetworkAvailable(this@MainActivity)) {
                         initUpdates(viewModel, this@MainActivity)
                         stationsViewModel.setNetworkError(false) // reset błędu sieci
                     } else {
@@ -133,7 +128,7 @@ class MainActivity : ComponentActivity() {
 
             lifecycleScope.launch {
                 viewModel.state.collectLatest { coordinates ->
-                    if (isNetworkAvailable() && coordinates.latitude != 0.0 && coordinates.longitude != 0.0) {
+                    if (isNetworkAvailable(this@MainActivity) && coordinates.latitude != 0.0 && coordinates.longitude != 0.0) {
                         stationsViewModel.fetchStations(coordinates.latitude, coordinates.longitude)
                         stationsViewModel.setNetworkError(false) // reset błędu sieci po udanym pobraniu
                     } else {
@@ -148,7 +143,7 @@ class MainActivity : ComponentActivity() {
             // Regularne pobieranie lokalizacji i stacji co sekunde
             lifecycleScope.launch {
                 while (true) {
-                    if (isNetworkAvailable()) {
+                    if (isNetworkAvailable(this@MainActivity)) {
                         stationsViewModel.setNetworkError(false) // reset błędu sieci
                     } else {
                         stationsViewModel.setNetworkError(true) // ustawienie błędu sieci
@@ -159,7 +154,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             lifecycleScope.launch {
-                if (isNetworkAvailable()) {
+                if (isNetworkAvailable(this@MainActivity)) {
                     stationsViewModel.fetchStations(
                         intent.getDoubleExtra("wybrane_miasto_lat", 0.0), intent.getDoubleExtra("wybrane_miasto_lon", 0.0)
                     )
@@ -172,61 +167,35 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            NearestStation(stationsViewModel = stationsViewModel,
-                airQualityIndexViewModel = airQualityIndexViewModel, ::isNetworkAvailable)
+            val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
+            val nearestStation by stationsViewModel.nearestStation.observeAsState()
+            val networkError by stationsViewModel.networkError.observeAsState(false)
+            nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
+            Column {
+                when {
+                    networkError -> {
+                        // Komunikat o braku internetu
+                        Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
+                    }
+                }
+
+
+            }
+            if(isNetworkAvailable(this)){
+                MainView(nearestStation, airQualityCategories, this, nazwaMiasta)
+            }
+            else{
+                MainView(
+                    Station(0, "", 0.0, 0.0), AirQualityCategories(listOf()), this, nazwaMiasta
+                )
+            }
         }
     }
 
 
-    // Funkcja nasłuchująca stanu połączenia sieciowego
-    private fun observeNetworkConnectivity() {
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                stationsViewModel.setNetworkError(false)
-            }
 
-            override fun onLost(network: Network) {
-                stationsViewModel.setNetworkError(true)
-            }
-        })
-    }
-
-    // Funkcja sprawdzająca dostępność połączenia sieciowego (na żądanie)
-    private fun isNetworkAvailable(): Boolean {
-        val connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
 }
 
-
-
-@Composable
-fun NearestStation(stationsViewModel: StationsViewModel,
-                       airQualityIndexViewModel: AirQualityIndexViewModel, isNetworkAvailable: ()->Boolean)
-{
-    val nearestStation by stationsViewModel.nearestStation.observeAsState()
-    val networkError by stationsViewModel.networkError.observeAsState(false)
-
-    Column {
-        when {
-            networkError -> {
-                // Komunikat o braku internetu
-                Text(text = "Brak połączenia z internetem. Nie można pobrać stacji.")
-            }
-        }
-        val airQualityCategories by airQualityIndexViewModel.airQualityCategories.observeAsState()
-        nearestStation?.let { airQualityIndexViewModel.fetchSensorsDataByStationId(it.id) }
-        if(isNetworkAvailable()){
-            MainView(nearestStation, airQualityCategories)
-        }
-        else{
-            MainView(Station(0, "", 0.0, 0.0))
-        }
-    }
-}
 
 @Composable
 fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
@@ -282,24 +251,39 @@ fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "NEXUS_5", device = Devices.NEXUS_5, apiLevel = 33)
+@Preview(name = "NEXUS_6", device = Devices.NEXUS_6, apiLevel = 33)
+@Preview(name = "NEXUS_5X", device = Devices.NEXUS_5X, apiLevel = 33)
+@Preview(name = "NEXUS_6P", device = Devices.NEXUS_6P, apiLevel = 33)
+@Preview(name = "PIXEL", device = Devices.PIXEL, apiLevel = 33)
+@Preview(name = "PIXEL_XL", device = Devices.PIXEL_XL, apiLevel = 33)
+@Preview(name = "PIXEL_2", device = Devices.PIXEL_2, apiLevel = 33)
+@Preview(name = "PIXEL_2_XL", device = Devices.PIXEL_2_XL, apiLevel = 33)
+@Preview(name = "PIXEL_3", device = Devices.PIXEL_3, apiLevel = 33)
+@Preview(name = "PIXEL_3_XL", device = Devices.PIXEL_3_XL, apiLevel = 33)
+@Preview(name = "PIXEL_3A", device = Devices.PIXEL_3A, apiLevel = 33)
+@Preview(name = "PIXEL_3A_XL", device = Devices.PIXEL_3A_XL, apiLevel = 33)
+@Preview(name = "PIXEL_4", device = Devices.PIXEL_4, apiLevel = 33)
+@Preview(name = "PIXEL_4_XL", device = Devices.PIXEL_4_XL, apiLevel = 33)
 @Composable
-fun MainView(
-    nearestStation: Station? = Station(999, "Warsaw", 0.0, 0.0, 0.0),
-    airQuality: AirQualityCategories? = AirQualityCategories(listOf())
-) {
-    val context = LocalContext.current
-    val activity = context as Activity
-    val intent  = activity.intent
+fun MainViewPreview(){
+    MainView(Station(999, "Warsaw", 0.0, 0.0, 0.0), AirQualityCategories(listOf()), LocalContext.current, "")
+}
+
+@Composable
+fun MainView(nearestStation: Station?, airQuality: AirQualityCategories?, context: Context, nazwaMiasta: String?) {
+    val activity = context.findActivity()
     val selectedIndex = remember { mutableIntStateOf(0) } // Zapamiętuje wybraną zakładkę
     val background = getImageBitmap()
 
-    Column(Modifier.fillMaxWidth().drawBehind {
+    Column(Modifier.fillMaxSize().systemBarsPadding().drawBehind {
         val widthScaleFactor = size.width / background.width
-        val heightScaleFactor = (size.height / 2) / background.height
+        val heightScaleFactor = (size.height * 0.4f) / background.height
+        // Rysowanie background
         drawIntoCanvas { canvas ->
             with(canvas.nativeCanvas){
                 save()
+                // Skalowanie obrazku
                 scale(widthScaleFactor, heightScaleFactor)
                 drawImage(
                     background,
@@ -309,18 +293,16 @@ fun MainView(
             }
         }
     }) {
-        Column(Modifier.fillMaxSize().statusBarsPadding().systemBarsPadding()) {
             // Przycisk po prawej stronie (oryginalny kod)
 
-            if (intent.getStringExtra("wybrane_miasto_nazwa") != null) {
+            if (nazwaMiasta != null) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
                             start = 30.dp,
                             end = 30.dp,
-                            top = 30.dp,
-                            bottom = 10.dp
+                            top = 20.dp,
                         ), // Padding top, aby ustawić je odpowiednio od góry
                     horizontalArrangement = Arrangement.SpaceBetween // Rozdziela przyciski na przeciwnych stronach
                 ) {
@@ -332,11 +314,11 @@ fun MainView(
                         contentPadding = PaddingValues(0.dp),
                         onClick = {
                             val newIntent = Intent(context, MainActivity::class.java)
-                            activity.startActivity(newIntent)
+                            activity?.startActivity(newIntent)
                         },
                     ) {
                         Image(
-                            painter = painterResource(R.drawable.arrow_black), // Obrazek strzałki
+                            painter = if (checkIfIsNight()) painterResource(R.drawable.arrow_back_white) else painterResource(R.drawable.arrow_black), // Obrazek strzałki
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
@@ -355,7 +337,7 @@ fun MainView(
                         },
                     ) {
                         Image(
-                            painter = painterResource(R.drawable.menu_black),
+                            painter = if (checkIfIsNight()) painterResource(R.drawable.menu_white) else painterResource(R.drawable.menu_black),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -369,8 +351,7 @@ fun MainView(
                         .padding(
                             start = 30.dp,
                             end = 30.dp,
-                            top = 30.dp,
-                            bottom = 10.dp
+                            top = 20.dp,
                         ), // Padding top, aby ustawić je odpowiednio od góry
                     horizontalArrangement = Arrangement.End // Umieszcza przycisk na końcu strony
                 ) {
@@ -387,7 +368,7 @@ fun MainView(
                         },
                     ) {
                         Image(
-                            painter = painterResource(R.drawable.menu_black),
+                            painter = if (checkIfIsNight()) painterResource(R.drawable.menu_white) else painterResource(R.drawable.menu_black),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
@@ -395,11 +376,11 @@ fun MainView(
                     }
                 }
             }
-
-            Box(
+            Spacer(Modifier.height(10.dp))
+            Box (
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(240.dp)
+                    .height((getScreenHeight() * 0.09f).dp)
                     .drawBehind {
                         drawCircle(
                             color = Color(
@@ -410,46 +391,45 @@ fun MainView(
                                     )
                                 )
                             ),
-                            radius = 320f
+                            radius = getScreenHeight() * 0.13f
                         )
                         drawCircle(
                             color = Color(0xFFFFE9C9),
-                            radius = 305f
+                            radius = getScreenHeight() * 0.125f
                         )
                     }
             ) {
-                Column(modifier = Modifier.align(Alignment.TopCenter)) {
                     Text(
                         text = "AIR METER",
                         fontSize = 20.sp,
                         fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                        modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = 30.dp)
-                            .padding(top = 15.dp)
+                        modifier = Modifier.align(Alignment.TopCenter).offset(y = 20.dp)
                     )
-                    Spacer(Modifier.height(10.dp))
-                    Text(
-                        text = getPercentageAirPurity(
-                            getQuality(
-                                airQuality,
-                                "Krajowy indeks jakości powietrza"
-                            )
-                        ),
-                        fontSize = 75.sp,
-                        fontFamily = FontFamily(Font(R.font.prompt)),
-                        fontWeight = FontWeight(250),
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                    Spacer(Modifier.height(10.dp))
+                    Box(modifier = Modifier.align(Alignment.Center)){
+                        Text(
+                            text = getPercentageAirPurity(
+                                getQuality(
+                                    airQuality,
+                                    "Krajowy indeks jakości powietrza"
+                                )
+                            ),
+                            fontSize = 75.sp,
+                            fontFamily = FontFamily(Font(R.font.prompt)),
+                            maxLines = 1,
+                            fontWeight = FontWeight(250),
+                            modifier = Modifier.align(Alignment.Center).offset(y = (-20).dp)
+                        )
+                    }
                     Text(
                         text = getQuality(airQuality, "Krajowy indeks jakości powietrza"),
                         fontSize = 20.sp,
                         fontFamily = FontFamily(Font(R.font.prompt, FontWeight.Normal)),
-                        modifier = Modifier.align(Alignment.CenterHorizontally).offset(y = (-30).dp)
+                        modifier = Modifier.align(Alignment.BottomCenter).offset(y = (-30).dp)
                     )
-                }
+
             }
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(30.dp))
 
             Row(modifier = Modifier.align(Alignment.CenterHorizontally)) {
                 Image(
@@ -470,20 +450,20 @@ fun MainView(
             }
 
 
-            Spacer(Modifier.height(50.dp))
+            Spacer(Modifier.height(30.dp))
 
-            Column(verticalArrangement = Arrangement.spacedBy(30.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy((getScreenHeight() * 0.011f).dp)) {
                 IndexField("PM 2.5", getQuality(airQuality, "PM2.5"))
                 IndexField("PM 10", getQuality(airQuality, "PM10"))
                 IndexField("NO₂", getQuality(airQuality, "NO2"))
                 IndexField("SO₂", getQuality(airQuality, "SO2"))
                 IndexField("O₃", getQuality(airQuality, "O3"))
             }
-
-            Box(
+            Spacer(modifier = Modifier.height((getScreenHeight() * 0.001f).dp)) // Przestrzeń nad przyciskiem
+            Row(
                 modifier = Modifier
                     .fillMaxWidth(), // Rozciągnij Box na całą szerokość
-                contentAlignment = Alignment.Center // Wyrównaj przycisk na środku
+                horizontalArrangement = Arrangement.Center // Wyrównaj przycisk na środku
             ) {
                 Button(
                     onClick = {
@@ -527,7 +507,7 @@ fun MainView(
 
             NavMenu(selectedIndex.intValue)
         }
-    }
+
 }
 
     @Composable
@@ -535,13 +515,12 @@ fun NavMenu(selectedIndex: Int) {
     val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val context = LocalContext.current
 
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .fillMaxWidth(),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        //Spacer(modifier = Modifier.height(24.dp)) // Przestrzeń nad paskiem menu
+        Spacer(modifier = Modifier.height((getScreenHeight() * 0.001f).dp)) // Przestrzeń nad paskiem menu
 
         Box(
             modifier = Modifier
