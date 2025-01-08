@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.SnackbarHost
@@ -21,9 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -47,12 +50,14 @@ import com.example.air_checker.R
 import com.example.air_checker.database.Measure
 import com.example.air_checker.viewModel.exportToCSV
 import com.example.air_checker.viewModel.getColor
+import com.example.air_checker.viewModel.getScreenHeight
 import com.example.air_checker.viewModel.loadMoreItems
 import deleteFromDatabase
 import kotlinx.coroutines.launch
 import readRecordsFromDatabase
 import java.io.File
 import java.io.FileOutputStream
+import java.time.LocalDateTime
 
 class HistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,15 +72,17 @@ class HistoryActivity : ComponentActivity() {
 
 @Composable
 fun HistoryView(items: List<Measure>) {
-//    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-//    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState()}
     val context = LocalContext.current
     val selectedIndex = remember { mutableIntStateOf(3) }
     var currentIndex by remember { mutableIntStateOf(0) }
     val displayedItems = remember { mutableStateListOf<Measure>() }
-    var currentItem by remember { mutableIntStateOf(0) }
+    val listState = rememberLazyListState()
+    var showBottomGradient by remember { mutableStateOf(true) }
+    var showTopGradient by remember { mutableStateOf(true) }
+    val firstVisibleItemIndex = remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: -1 } }
+    val lastVisibleItemIndex = remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 } }
     Column(
         verticalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier
@@ -106,7 +113,7 @@ fun HistoryView(items: List<Measure>) {
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // Lista z maską
         Box(
@@ -118,15 +125,20 @@ fun HistoryView(items: List<Measure>) {
                 loadMoreItems(currentIndex, items, displayedItems)
                 currentIndex += 6
             }
-
+            LaunchedEffect(lastVisibleItemIndex.value) {
+                showBottomGradient = lastVisibleItemIndex.value != items.size - 1
+            }
+            LaunchedEffect(firstVisibleItemIndex.value) {
+                showTopGradient = firstVisibleItemIndex.value != 0
+            }
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .padding(horizontal = 40.dp)
                     .fillMaxWidth()
             ) {
 
                 itemsIndexed(displayedItems){ index,item ->
-                    currentItem = index
                     ColoredBox(item.qualityCategory!!, item.timestamp!!, item.place!!, item.pm25!!, item.pm10!!, item.no2!!, item.so2!!, item.id!!, displayedItems)
                     if (index >= displayedItems.size - 1 && currentIndex < items.size) {
                         LaunchedEffect(Unit) {
@@ -136,8 +148,8 @@ fun HistoryView(items: List<Measure>) {
                     }
                 }
             }
-            if (currentItem < items.size - 1){
-                // Dolna maska
+            if (showBottomGradient)
+            {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -152,7 +164,8 @@ fun HistoryView(items: List<Measure>) {
                         .align(Alignment.BottomCenter)
                 )
             }
-            if(currentItem > 4){
+            if (showTopGradient)
+            {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -168,7 +181,6 @@ fun HistoryView(items: List<Measure>) {
                 )
             }
         }
-
         TextButton(
             onClick = {
                 val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
@@ -312,5 +324,11 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
 @Preview(name = "PIXEL_4_XL", device = Devices.PIXEL_4_XL, apiLevel = 33, showBackground = true)
 @Composable
 fun HistoryPreview() {
-    HistoryView(listOf())
+    val measure = mutableListOf<Measure>()
+    for (i in 1..10)
+    {
+        measure.add(Measure(i, "Warszawa", 0.0, "Nieznany", null, "Nieznany", "Nieznany","Nieznany", "Nieznany", "Nieznany",
+            LocalDateTime.now().toLocalDate().toString()))
+    }
+    HistoryView(measure)
 }
