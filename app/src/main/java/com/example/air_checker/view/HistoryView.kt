@@ -57,7 +57,10 @@ import kotlinx.coroutines.launch
 import readRecordsFromDatabase
 import java.io.File
 import java.io.FileOutputStream
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
+import java.util.Date
+import java.util.Locale
 
 class HistoryActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -183,12 +186,29 @@ fun HistoryView(items: List<Measure>) {
         }
         TextButton(
             onClick = {
-                val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                val file = File(documentsDir, "wyniki_pomiarów.csv")
-                FileOutputStream(file).apply { exportToCSV(readRecordsFromDatabase(context).history) }
-                if (file.exists()){
-                    scope.launch{
-                        snackBarHostState.showSnackbar("Plik z wynikami został pomyślnie utworzony w folderze Dokumenty")
+                try {
+                    val documentsDir =
+                        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+
+                    // Dodanie timestamp do nazwy pliku
+                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(
+                        Date()
+                    )
+                    val fileName = "wyniki_pomiarów_$timestamp.csv"
+                    val file = File(documentsDir, fileName)
+
+                    FileOutputStream(file).apply {
+                        exportToCSV(readRecordsFromDatabase(context).history)
+                    }
+
+                    if (file.exists()) {
+                        scope.launch {
+                            snackBarHostState.showSnackbar("Plik z wynikami został pomyślnie utworzony w folderze Dokumenty: $fileName")
+                        }
+                    }
+                } catch (e: Exception) {
+                    scope.launch {
+                        e.localizedMessage?.let { snackBarHostState.showSnackbar(it) }
                     }
                 }
             },
