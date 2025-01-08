@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -219,23 +220,29 @@ fun HistoryView(items: List<Measure>) {
 }
 
 @Composable
-fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String, valuePM10: String, valueNO2: String, valueSO2: String, itemID: Int, displayedItems:  SnapshotStateList<Measure>) {
+fun ColoredBox(
+    colorFlag: String,
+    date: String,
+    place: String,
+    valuePM25: String,
+    valuePM10: String,
+    valueNO2: String,
+    valueSO2: String,
+    itemID: Int,
+    displayedItems: SnapshotStateList<Measure>
+) {
     val flagColor = Color(getColor(colorFlag))
     val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(90.dp) // Zwiększona wysokość, aby pomieścić dwa rzędy tekstu
+            .wrapContentHeight()
             .background(Color(0xFF80E4FF), shape = RoundedCornerShape(8.dp))
     ) {
-        // Kolumna z tekstem i obrazem
         Column(
-            modifier = Modifier
-                .fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = date,
                     modifier = Modifier
@@ -244,7 +251,9 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                     fontSize = 12.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
-                    color = Color(0xFF3F3F3F)
+                    color = Color(0xFF3F3F3F),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = place,
@@ -254,58 +263,58 @@ fun ColoredBox(colorFlag: String, date: String, place: String, valuePM25: String
                     fontSize = 12.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
-                    color = Color(0xFF3F3F3F)
+                    color = Color(0xFF3F3F3F),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Button(
                     onClick = {
-                        deleteFromDatabase(context, id=itemID)
+                        deleteFromDatabase(context, id = itemID)
                         displayedItems.removeIf { it.id == itemID }
                     },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(top = 4.dp, end = 4.dp)
-                        .size(26.dp), // Rozmiar przycisku (możesz dostosować według potrzeb)
-                    contentPadding = PaddingValues(0.dp), // Usuń domyślne padding`i przycisku
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent) // Ustaw przezroczyste tło, jeśli potrzebne
+                        .size(26.dp),
+                    contentPadding = PaddingValues(0.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
                 ) {
                     Image(
                         painter = painterResource(R.drawable.button_close),
                         contentDescription = null,
-                        modifier = Modifier.size(20.dp) // Rozmiar ikony (możesz dostosować według potrzeb)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-
             }
             Spacer(modifier = Modifier.height(2.dp))
-            Box(
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            Box(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    text = "PM 2.5 [$valuePM25] PM 10 [$valuePM10] \nNO 2 [$valueNO2] SO 2 [$valueSO2]",
-                    modifier = Modifier
-                        .align(Alignment.Center),
+                    text = "PM 2.5 [$valuePM25] PM 10 [$valuePM10]\nNO 2 [$valueNO2] SO 2 [$valueSO2]",
+                    modifier = Modifier.align(Alignment.Center),
                     textAlign = TextAlign.Center,
                     fontSize = 14.sp,
                     fontFamily = FontFamily(Font(R.font.prompt)),
                     fontWeight = FontWeight(250),
-                    color = Color(0xFF3F3F3F)
+                    color = Color(0xFF3F3F3F),
+                    maxLines = 2, // Pozwolenie na maksymalnie dwa wiersze
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-
-
             Spacer(modifier = Modifier.weight(1f))
-
             Box(
                 modifier = Modifier
                     .height(8.dp)
                     .fillMaxWidth()
-                    .background(flagColor, shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp))
+                    .background(
+                        flagColor,
+                        shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp)
+                    )
             )
         }
     }
-
     Spacer(modifier = Modifier.height(20.dp))
 }
+
 
 
 @Preview(name = "NEXUS_5", device = Devices.NEXUS_5, apiLevel = 33, showBackground = true)

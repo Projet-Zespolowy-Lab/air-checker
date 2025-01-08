@@ -226,7 +226,7 @@ fun IndexField(indexName: String, indexValue: String, fieldWidth: Dp = 340.dp) {
             Box(
                 modifier = Modifier
                     .align(Alignment.CenterVertically)
-                    .size(width = 45.dp, height = 40.dp) // Stały rozmiar obramowania
+                    .size(width = 140.dp, height = 40.dp) // Stały rozmiar obramowania
                     .border(
                         width = 2.dp,
                         color = Color(0xFF80E4FF), // Kolor obramowania
