@@ -28,6 +28,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -77,6 +78,7 @@ fun HistoryView(items: List<Measure>) {
     var currentIndex by remember { mutableIntStateOf(0) }
     val displayedItems = remember { mutableStateListOf<Measure>() }
     val listState = rememberLazyListState()
+    val listSize by rememberUpdatedState(displayedItems.size)
     var showBottomGradient by remember { mutableStateOf(true) }
     var showTopGradient by remember { mutableStateOf(true) }
     val firstVisibleItemIndex = remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: -1 } }
@@ -124,7 +126,7 @@ fun HistoryView(items: List<Measure>) {
                 currentIndex += 6
             }
             LaunchedEffect(lastVisibleItemIndex.value) {
-                showBottomGradient = lastVisibleItemIndex.value != items.size
+                showBottomGradient = lastVisibleItemIndex.value != listSize - 1 && listSize > lastVisibleItemIndex.value
             }
             LaunchedEffect(firstVisibleItemIndex.value) {
                 showTopGradient = firstVisibleItemIndex.value != 0
