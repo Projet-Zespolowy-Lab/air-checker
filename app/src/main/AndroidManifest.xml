@@ -9,12 +9,12 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
-    <uses-permission
-        android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION"
-        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
 
     <application
+        android:requestLegacyExternalStorage="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -23,10 +23,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AirChecker"
-        tools:targetApi="31">
+        android:screenOrientation="portrait"
+        tools:ignore="DiscouragedApi">
+        <activity
+            android:name=".view.HistoryActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize"/>
         <activity
             android:name=".view.FirstStart"
             android:exported="true"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize"
             android:theme="@style/Theme.AirChecker">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,9 +41,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".view.MainActivity" />
-        <activity android:name=".view.WelcomeActivity" />
-        <activity android:name=".view.ScreenActivity" />
+        <activity android:name=".view.MainActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize"/>
+        <activity android:name=".view.WelcomeActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize"/>
+        <activity android:name=".view.CityFinderActivity"
+            android:screenOrientation="portrait"
+            android:configChanges="orientation|screenSize"/>
     </application>
 
 </manifest>

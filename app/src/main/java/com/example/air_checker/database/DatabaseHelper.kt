@@ -5,6 +5,8 @@ import com.example.air_checker.database.Measure
 import com.example.air_checker.database.MeasureHistory
 import com.example.air_checker.model.Place
 import java.io.FileOutputStream
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 // Nazwa bazy danych
 // Fizycznie plik jest w .../air-checker/app/src/main/assets/air_checker.db
@@ -35,7 +37,7 @@ fun readRecordsFromDatabase(context: Context): MeasureHistory {
   val dbPath = context.getDatabasePath(dbName).absolutePath
   val db = SQLiteDatabase.openDatabase(dbPath, null, SQLiteDatabase.OPEN_READONLY)
 
-  val cursor = db.rawQuery("SELECT ID, place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3, timestamp FROM MeasureHistory", null)
+  val cursor = db.rawQuery("SELECT ID, place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3, timestamp FROM MeasureHistory ORDER BY timestamp DESC", null)
   val measures = mutableListOf<Measure>()
 
   // Iteracja przez rekordy
@@ -67,9 +69,12 @@ fun insertRecordToDatabase(context: Context, measure: Measure) {
   val db = getDatabase(context)  // Otwórz bazę danych do zapisu
 
   val query = """
-        INSERT INTO MeasureHistory (place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO MeasureHistory (place, qualityIndex, qualityCategory, color, pm10, pm25, no2, so2, o3, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """.trimIndent()
+
+  val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+  val time = LocalDateTime.now().format(formatter)
 
   val statement = db.compileStatement(query)
   statement.bindString(1, measure.place)
@@ -81,6 +86,8 @@ fun insertRecordToDatabase(context: Context, measure: Measure) {
   statement.bindString(7, measure.no2)
   statement.bindString(8, measure.so2)
   statement.bindString(9, measure.o3)
+  statement.bindString(10, time)
+
 
   statement.executeInsert()  // Wykonanie zapytania
   db.close()
