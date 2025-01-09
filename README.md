@@ -17,6 +17,7 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 - GitHub
 - Figma
 - ~~Google geolocation API~~
+- Google geolocation API 
 - API Głównego Inspektoratu Ochrony Środowiska (https://powietrze.gios.gov.pl/pjp/content/api)
 - ~~Replit~~ - używany do mockowania testów
 - Miro
@@ -49,6 +50,10 @@ Aplikacja mobilna informująca użytkownika o stanie czystości powietrza w jego
 ## Piątek 6 grudnia 20:30
 - Zakończony research nt. odczytywania danych z GPS telefonu
 - Kolor w aplikacji zmienia się w zależności od jakości powietrza
+
+## Piątek 6 grudnia 20:30
+- Zakończony research nt. odczytywania danych z GPS telefonu
+- Kolor w aplikacji zmienia się w zależności od jakości powietrza 
 
 ## Piątek 29 listopada 20:30
 - Ekran startowy z instrukcją użytkowania
