@@ -193,7 +193,7 @@ fun HistoryView(items: List<Measure>) {
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 120.dp)
+                .padding(horizontal = 110.dp)
                 .background(Color(0xFF80E4FF), shape = RoundedCornerShape(12.dp))
         ) {
             Image(
