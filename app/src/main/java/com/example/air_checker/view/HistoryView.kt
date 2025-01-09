@@ -183,11 +183,16 @@ fun HistoryView(items: List<Measure>) {
         }
         TextButton(
             onClick = {
-                val fileName = "wyniki_pomiarów.csv"
-                saveCsvToDocuments(context, fileName , readRecordsFromDatabase(context).history)
-                if (fileExists(context, fileName)){
-                    scope.launch{
-                        snackBarHostState.showSnackbar("Plik z wynikami został pomyślnie utworzony w folderze Dokumenty")
+                try {
+                    val fileName = "wyniki_pomiarów.csv"
+                    saveCsvToDocuments(context, fileName, readRecordsFromDatabase(context).history)
+                    scope.launch {
+                        snackBarHostState.showSnackbar("Plik z wynikami został utworzony w folderze Documents.")
+                    }
+                }
+                catch(e: Exception){
+                    scope.launch {
+                        snackBarHostState.showSnackbar("Nie udało się zapisać pliku.")
                     }
                 }
             },
