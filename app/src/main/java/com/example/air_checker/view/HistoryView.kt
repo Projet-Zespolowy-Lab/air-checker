@@ -1,7 +1,6 @@
 package com.example.air_checker.view
 
 import android.os.Bundle
-import android.os.Environment
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,9 +10,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.SnackbarHost
@@ -29,6 +28,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
@@ -49,15 +49,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.air_checker.R
 import com.example.air_checker.database.Measure
-import com.example.air_checker.viewModel.exportToCSV
+import com.example.air_checker.viewModel.fileExists
 import com.example.air_checker.viewModel.getColor
-import com.example.air_checker.viewModel.getScreenHeight
 import com.example.air_checker.viewModel.loadMoreItems
+import com.example.air_checker.viewModel.saveCsvToDocuments
 import deleteFromDatabase
 import kotlinx.coroutines.launch
 import readRecordsFromDatabase
-import java.io.File
-import java.io.FileOutputStream
 import java.time.LocalDateTime
 
 class HistoryActivity : ComponentActivity() {
@@ -74,12 +72,13 @@ class HistoryActivity : ComponentActivity() {
 @Composable
 fun HistoryView(items: List<Measure>) {
     val scope = rememberCoroutineScope()
-    val snackBarHostState = remember { SnackbarHostState()}
     val context = LocalContext.current
+    val snackBarHostState = remember { SnackbarHostState()}
     val selectedIndex = remember { mutableIntStateOf(3) }
     var currentIndex by remember { mutableIntStateOf(0) }
     val displayedItems = remember { mutableStateListOf<Measure>() }
     val listState = rememberLazyListState()
+    val listSize by rememberUpdatedState(displayedItems.size)
     var showBottomGradient by remember { mutableStateOf(true) }
     var showTopGradient by remember { mutableStateOf(true) }
     val firstVisibleItemIndex = remember { derivedStateOf { listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: -1 } }
@@ -127,7 +126,7 @@ fun HistoryView(items: List<Measure>) {
                 currentIndex += 6
             }
             LaunchedEffect(lastVisibleItemIndex.value) {
-                showBottomGradient = lastVisibleItemIndex.value != items.size - 1
+                showBottomGradient = lastVisibleItemIndex.value != listSize - 1 && listSize > lastVisibleItemIndex.value
             }
             LaunchedEffect(firstVisibleItemIndex.value) {
                 showTopGradient = firstVisibleItemIndex.value != 0
@@ -184,10 +183,9 @@ fun HistoryView(items: List<Measure>) {
         }
         TextButton(
             onClick = {
-                val documentsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
-                val file = File(documentsDir, "wyniki_pomiarów.csv")
-                FileOutputStream(file).apply { exportToCSV(readRecordsFromDatabase(context).history) }
-                if (file.exists()){
+                val fileName = "wyniki_pomiarów.csv"
+                saveCsvToDocuments(context, fileName , readRecordsFromDatabase(context).history)
+                if (fileExists(context, fileName)){
                     scope.launch{
                         snackBarHostState.showSnackbar("Plik z wynikami został pomyślnie utworzony w folderze Dokumenty")
                     }
