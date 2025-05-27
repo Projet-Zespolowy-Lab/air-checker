@@ -80,8 +80,6 @@ Wyświetlanie następujących pomiarów jakości powietrza:
 ### Pozostałe
 - GitHub
 - Figma
-- ~~Google geolocation API~~
-- Google geolocation API 
 - API Głównego Inspektoratu Ochrony Środowiska (https://powietrze.gios.gov.pl/pjp/content/api)
 - ~~Replit~~ - używany do mockowania testów
 - Miro
